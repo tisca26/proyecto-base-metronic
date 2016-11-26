@@ -19,7 +19,7 @@ class Users extends Acl_controller
     {
         parent::__construct();
 
-        $this->set_read_list(array('index', 'nick_exist', 'loadSubSecretary', 'sucursal_asociate'));
+        $this->set_read_list(array('index', 'nick_exist', 'sucursal_asociate'));
         $this->set_insert_list(array('insert_user', 'form_insert'));
         $this->set_update_list(array('edit_user', 'form_edit', 'change_password', 'form_password'));
         $this->set_delete_list(array('delete_user'));
@@ -38,96 +38,69 @@ class Users extends Acl_controller
      */
     function index()
     {
+        $this->cargar_idioma->carga_lang('users/users_index');
+        $data = array();
         $data['rows'] = $this->users_model->get_all();
-
-        $data['sucursales'] = $this->loadSucursal();
-
-        $template['_B'] = 'users/users_view.php';
-
+        $template['_B'] = 'users/users_index.php';
         $this->load->template_view($this->template_base, $data, $template);
     }
 
-    /**
-     * Insert a new user
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function insert_user()
     {
+        $this->cargar_idioma->carga_lang('users/users_inserta');
         $name = $this->input->post('nombre');
-        $apellido = $this->input->post('apellido');
-        $email = $this->input->post('email');
+        $apellido = $this->input->post('apellidos');
+        $email = $this->input->post('correo');
         $nick = $this->input->post('nick');
         $opciones = [
             'cost' => 10,
         ];
         $paswd = password_hash($this->input->post('password'), PASSWORD_BCRYPT, $opciones);
-        $celular = $this->input->post('celular');
-        $sucursal = $this->input->post('sucursal');
-        $rfc = $this->input->post('rfc');
         $enable = ($this->input->post('enableuser') == FALSE) ? FALSE : TRUE;
-        $id = $this->users_model->insert($nick, $paswd, $name, $apellido, $email, $celular, $sucursal, $enable, $rfc);
-        if (isset($_POST['checkgroup'])) {
-            foreach ($_POST['checkgroup'] as $group) {
-                $this->users_model->insert_group_relation($id, $group);
+        $id = 0;
+        if ($this->users_model->insert($nick, $paswd, $name, $apellido, $email, $enable) == TRUE) {
+            $id = $this->users_model->identity();
+            $group = $this->input->post('radio_group');
+            if ($this->users_model->insert_group_relation($id, $group) == TRUE) {
+                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
+                return redirect('users/form_insert');
+            } else {
+                $this->users_model->delete($id);
+                $error = $this->users_model->error_consulta();
+                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
+                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
+                return $this->form_insert();
             }
+        } else {
+            $error = $this->users_model->error_consulta();
+            $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
+            set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
+            return $this->form_insert();
         }
-        $data['m_tipo'] = 'Ok insert';
-        $data['m_titulo'] = 'Usuarios';
-        $data['m_mensaje'] = 'El usuario se guardó con éxito';
-        $this->session->set_flashdata('m_tipo', $data['m_tipo']);
-        $this->session->set_flashdata('m_titulo', $data['m_titulo']);
-        $this->session->set_flashdata('m_mensaje', $data['m_mensaje']);
-        redirect('users/');
-
     }
 
-    /**
-     * Update user data
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function edit_user()
     {
+        $this->cargar_idioma->carga_lang('users/users_edita');
         $id = $this->input->post('userid');
         $name = $this->input->post('nombre');
-        $apellido = $this->input->post('apellido');
-        $email = $this->input->post('email');
+        $apellido = $this->input->post('apellidos');
+        $email = $this->input->post('correo');
         $nick = $this->input->post('nick');
-        $celular = $this->input->post('celular');
-        $sucursal = $this->input->post('SUCURSAL_ID');
         $enable = ($this->input->post('enableuser') == FALSE) ? FALSE : TRUE;
-        $rfc = $this->input->post('rfc');
-
-        $this->users_model->update_all($id, $nick, $name, $apellido, $email, $celular, $sucursal, $enable, $rfc);
-
-        if (isset($_POST['checkgroup'])) {
-            $groups = $_POST['checkgroup'];
-            $this->users_model->update_group_relation($id, $groups);
-        } else {
-            $this->users_model->update_group_relation($id, array());
+        if ($this->users_model->update_all($id, $nick, $name, $apellido, $email, $enable) == TRUE){
+            $group = $this->input->post('radio_group');
+            if ($this->users_model->update_group_relation($id, $group) == TRUE){
+                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
+                return redirect('users');
+            }
         }
-
-        $data['m_tipo'] = 'Ok edit';
-        $data['m_titulo'] = 'Usuarios';
-        $data['m_mensaje'] = 'El usuario se editó con éxito';
-        $this->session->set_flashdata('m_tipo', $data['m_tipo']);
-        $this->session->set_flashdata('m_titulo', $data['m_titulo']);
-        $this->session->set_flashdata('m_mensaje', $data['m_mensaje']);
-        redirect('users/');
+        $error = $this->users_model->error_consulta();
+        $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
+        set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
+        return $this->form_edit($id);
     }
 
-    /**
-     * Update user password
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function change_password()
     {
 
@@ -155,13 +128,6 @@ class Users extends Acl_controller
         }
     }
 
-    /**
-     * delete user
-     *
-     * @access public
-     * @param  int
-     * @return
-     */
     function delete_user($id)
     {
 
@@ -176,12 +142,6 @@ class Users extends Acl_controller
         redirect('users/');
     }
 
-    /**
-     * Check if user nick exist (ajax method)
-     *
-     * @access public
-     * @return
-     */
     function nick_exist()
     {
         $nick = $this->input->post('nick');
@@ -189,12 +149,6 @@ class Users extends Acl_controller
         echo $this->users_model->nick_exist($nick, $id);
     }
 
-    /**
-     * Check if user nick exist to server side validate
-     *
-     * @access public
-     * @return
-     */
     function val_nick_exist($nick)
     {
         $id = ($this->input->post('userid') == FALSE) ? -1 : $this->input->post('userid');
@@ -205,51 +159,25 @@ class Users extends Acl_controller
             return TRUE;
     }
 
-    /**
-     * Load insert user form
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function form_insert()
     {
-
+        $this->cargar_idioma->carga_lang('users/users_inserta');
         $data['groups'] = $this->load_groups_options();
-        $data['sucursales'] = $this->loadSucursal();
-        // $data['departments'] = $this->load_departments_options();
-
-        $tamplate['_B'] = 'users/insert_user_view.php';
-
-        $this->load->template_view($this->template_base, $data, $tamplate);
+        $template['_B'] = 'users/users_insertar.php';
+        $this->load->template_view($this->template_base, $data, $template);
     }
 
-    /**
-     * Load edit user form
-     *
-     * @access public
-     * @param int , user id
-     * @return
-     */
     function form_edit($id = 0)
     {
-
-        $data['data'] = $this->users_model->get_user($id);
+        $this->cargar_idioma->carga_lang('users/users_edita');
+        $data['user'] = $this->users_model->get_user($id);
         $data['groups'] = $this->load_groups_options();
         $data['usergroups'] = $this->users_model->get_user_group($id);
-        $data['sucursales'] = $this->loadSucursal();
 
-        $tamplate['_B'] = 'users/edit_user_view.php';
+        $tamplate['_B'] = 'users/users_editar.php';
         $this->load->template_view($this->template_base, $data, $tamplate);
     }
 
-    /**
-     * Load form to chage user password
-     *
-     * @access public
-     * @param int , user id
-     * @return
-     */
     function form_password($id = 0)
     {
         $data['id'] = $id;
@@ -259,36 +187,10 @@ class Users extends Acl_controller
         $this->load->template_view($this->template_base, $data, $tamplate);
     }
 
-    /**
-     * Create group list to load multiselect component in views
-     *
-     * @access private
-     * @param
-     * @return array of groups data
-     */
     private function load_groups_options()
     {
-
         $this->load->model('groups_model');
-
-        $groups = $this->groups_model->get_all();
-        $options = array();
-        foreach ($groups as $group) {
-            $option['ID'] = $group->ID;
-            $option['NAME'] = $group->NAME;
-            $options[] = $option;
-        }
-
-        return $options;
-    }
-
-    private function loadSucursal()
-    {
-        $nomenclador = $this->catalogos_model->loadSucursal();
-        foreach ($nomenclador as $tipo) {
-            $options[$tipo->sucursal_id] = $tipo->nombre;
-        }
-        return $options;
+        return $this->groups_model->get_all();
     }
 }
 

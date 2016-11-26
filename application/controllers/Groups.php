@@ -7,11 +7,6 @@ class Groups extends Acl_controller
 
     private $template_base = 'index';
 
-    /**
-     * Constructor
-     *
-     * @access public
-     */
     function __construct()
     {
         parent::__construct();
@@ -27,66 +22,41 @@ class Groups extends Acl_controller
         $this->load->library('form_validation');
     }
 
-    /**
-     * Default Action. Listing group collection
-     *
-     * @access public
-     */
     function index()
     {
+        $this->cargar_idioma->carga_lang('groups/groups_index');
         $data['rows'] = $this->groups_model->get_all();
-
-        $template['_B'] = 'groups/groups_view.php';
-
+        $template['_B'] = 'groups/groups_index.php';
         $this->load->template_view($this->template_base, $data, $template);
 
     }
 
-    /**
-     * Insert a new group
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function insert_group()
     {
-
-        $this->form_validation->set_rules('groupname', lang('label_name'), 'required|trim');
-
-        $this->form_validation->set_error_delimiters('<div class="error">', '</div>');
-
+        $this->cargar_idioma->carga_lang('groups/groups_insertar');
+        $this->form_validation->set_rules('groupname', trans_line('groupname'), 'required|trim|min_length[3]');
         if ($this->form_validation->run() == FALSE) {
             $this->form_insert();
         } else {
-
             $name = $this->input->post('groupname');
             $enable = ((bool)$this->input->post('enablegroup') == FALSE) ? FALSE : TRUE;
-
-            $id = $this->groups_model->insert($name, $enable);
-
-            set_flash_message(lang('msg_insert_group_success'));
-            redirect('groups/');
+            if ($this->groups_model->insert($name, $enable) == TRUE) {
+                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
+                return redirect('groups/form_insert');
+            } else {
+                $error = $this->groups_model->error_consulta();
+                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
+                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
+                return $this->form_insert();
+            }
         }
-
     }
 
-    /**
-     * Edit a group data
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function edit_group()
     {
-
-        $this->form_validation->set_rules('groupname', lang('label_name'), 'required|trim');
-
-        $this->form_validation->set_error_delimiters('<div class="error">', '</div>');
-
+        $this->cargar_idioma->carga_lang('groups/groups_editar');
+        $this->form_validation->set_rules('groupname', trans_line('groupname'), 'required|trim|min_length[3]');
         $id = $this->input->post('groupid');
-
         if ($this->form_validation->run() == FALSE) {
             $this->form_edit($id);
         } else {
@@ -94,68 +64,44 @@ class Groups extends Acl_controller
             $name = $this->input->post('groupname');
             $enable = ((bool)$this->input->post('enablegroup') == FALSE) ? FALSE : TRUE;
 
-            $this->groups_model->update_all($id, $name, $enable);
-
-            set_flash_message(lang('msg_update_group_success'));
-            redirect('groups/');
+            if($this->groups_model->update_all($id, $name, $enable)  != FALSE){
+                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
+                return redirect('groups');
+            }else{
+                $error = $this->groups_model->error_consulta();
+                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
+                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
+                return $this->form_edit($id);
+            }
         }
 
     }
 
-    /**
-     * delete group
-     *
-     * @access public
-     * @param  int
-     * @return
-     */
     function delete_group($id = 0)
     {
-
-        if ($this->groups_model->delete($id) == 0) {
-            set_flash_message(lang('msg_delete_group_success'), FLASH_MSG_SUCCESS);
-        } else
-            set_flash_message(lang('msg_delete_group_failure'), FLASH_MSG_ERROR);
-
-        redirect('groups/');
+        $this->cargar_idioma->carga_lang('groups/groups_index');
+        if ($this->groups_model->delete($id) != FALSE) {
+            set_bootstrap_alert(trans_line('alerta_borrado'), BOOTSTRAP_ALERT_SUCCESS);
+            return redirect('groups');
+        } else {
+            set_bootstrap_alert(trans_line('alerta_borrado_fail'), BOOTSTRAP_ALERT_DANGER);
+            return redirect('groups');
+        }
     }
 
-    /**
-     * Load insert group form
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function form_insert()
     {
-
-        $tamplate['_B'] = 'groups/insert_group_view.php';
-
-        $this->load->template_view($this->template_base, $tamplate);
-
+        $this->cargar_idioma->carga_lang('groups/groups_insertar');
+        $template['_B'] = 'groups/groups_insertar.php';
+        $this->load->template_view($this->template_base, $template);
     }
 
-    /**
-     * Load edit group form
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function form_edit($id = 0)
     {
-
-        $data['data'] = $this->groups_model->get_group($id);
-
-
-        if ($this->session->userdata('nombregrupo') == 'Administrador') {
-            $tamplate['_B'] = 'groups/edit_group_view.php';
-        } else {
-            $tamplate['_B'] = 'groups/groups_view.php';
-        }
-
-        $this->load->template_view($this->template_base, $data, $tamplate);
+        $this->cargar_idioma->carga_lang('groups/groups_editar');
+        $data['grp'] = $this->groups_model->get_group($id);
+        $template['_B'] = 'groups/groups_editar.php';
+        $this->load->template_view($this->template_base, $data, $template);
     }
 }
 

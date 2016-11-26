@@ -7,11 +7,6 @@ class Resources extends Acl_controller
 
     private $template_base = 'index';
 
-    /**
-     * Constructor
-     *
-     * @access public
-     */
     function __construct()
     {
         parent::__construct();
@@ -20,127 +15,82 @@ class Resources extends Acl_controller
         $this->set_insert_list(array('insert_resource', 'form_insert'));
         $this->set_update_list(array('edit_resource', 'form_edit'));
         $this->set_delete_list(array('delete_resource'));
-
         $this->check_access();
-
         $this->load->model('resources_model');
         $this->load->library('form_validation');
     }
 
-    /**
-     * Default Action. Listing group collection
-     *
-     * @access public
-     */
     function index()
     {
+        $this->cargar_idioma->carga_lang('resources/resources_index');
+        $data = array();
         $data['rows'] = $this->resources_model->get_all();
-
-        $template['_B'] = 'resources/resources_view.php';
-
+        $template['_B'] = 'resources/resources_index.php';
         $this->load->template_view($this->template_base, $data, $template);
 
     }
 
-    /**
-     * Insert a new resource
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function insert_resource()
     {
-
-        $this->form_validation->set_rules('resourcename', lang('label_name'), 'required|trim');
-
-        $this->form_validation->set_error_delimiters('<div class="error">', '</div>');
-
+        $this->cargar_idioma->carga_lang('resources/resources_inserta');
+        $this->form_validation->set_rules('resourcename', trans_line('nombre_recurso'), 'required|trim|min_length[3]');
         if ($this->form_validation->run() == FALSE) {
             $this->form_insert();
         } else {
-
             $name = $this->input->post('resourcename');
-            $id = $this->resources_model->insert($name);
-
-            set_flash_message(lang('msg_insert_resource_success'));
-            redirect('resources/');
+            if ($this->resources_model->insert($name) == TRUE) {
+                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
+                return redirect('resources/form_insert');
+            } else {
+                $error = $this->resources_model->error_consulta();
+                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
+                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
+                return $this->form_insert();
+            }
         }
-
     }
 
-    /**
-     * Edit a resource data
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function edit_resource()
     {
-
-        $this->form_validation->set_rules('resourcename', lang('label_name'), 'required|trim');
-
-        $this->form_validation->set_error_delimiters('<div class="error">', '</div>');
-
+        $this->cargar_idioma->carga_lang('resources/resources_edita');
+        $this->form_validation->set_rules('resourcename', trans_line('nombre_recurso'), 'required|trim|min_length[3]');
         $id = $this->input->post('resourceid');
-
         if ($this->form_validation->run() == FALSE) {
             $this->form_edit($id);
         } else {
-
             $name = $this->input->post('resourcename');
-
-            $this->resources_model->update($id, $name);
-
-            set_flash_message(lang('msg_update_resource_success'));
-            redirect('resources/');
+            if ($this->resources_model->update($id, $name) == TRUE) {
+                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
+                return redirect('resources/');
+            } else {
+                $error = $this->resources_model->error_consulta();
+                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
+                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
+                return $this->form_edit($id);
+            }
         }
-
     }
 
-    /**
-     * delete resource
-     *
-     * @access public
-     * @param  int
-     * @return
-     */
     function delete_resource($id = 0)
     {
-
+        $this->cargar_idioma->carga_lang('resources/resources_index');
         $this->resources_model->delete($id);
-
-        set_flash_message(lang('msg_delete_resource_success'));
+        set_bootstrap_alert(trans_line('alerta_borrado'), BOOTSTRAP_ALERT_SUCCESS);
         redirect('resources/');
     }
 
-    /**
-     * Load insert resource form
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function form_insert()
     {
-        $tamplate['_B'] = 'resources/insert_resource_view.php';
-
-        $this->load->template_view($this->template_base, $tamplate);
+        $this->cargar_idioma->carga_lang('resources/resources_inserta');
+        $template['_B'] = 'resources/resources_insertar.php';
+        $this->load->template_view($this->template_base, $template);
     }
 
-    /**
-     * Load edit resource form
-     *
-     * @access public
-     * @param
-     * @return
-     */
     function form_edit($id = 0)
     {
-
-        $data['data'] = $this->resources_model->get_resource($id);
-        $tamplate['_B'] = 'resources/edit_resource_view.php';
+        $this->cargar_idioma->carga_lang('resources/resources_edita');
+        $data['resource'] = $this->resources_model->get_resource($id);
+        $tamplate['_B'] = 'resources/resources_editar.php';
         $this->load->template_view($this->template_base, $data, $tamplate);
     }
 }

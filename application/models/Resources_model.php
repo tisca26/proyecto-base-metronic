@@ -24,15 +24,11 @@ class Resources_model extends CI_Model
     function get_all()
     {
         $data = array();
-
         $query = $this->db->get('resources');
 
         if ($query->num_rows() > 0) {
-            foreach ($query->result() as $row) {
-                $data[] = $row;
-            }
+            $data = $query->result();
         }
-
         return $data;
     }
 
@@ -45,7 +41,7 @@ class Resources_model extends CI_Model
      */
     function get_resource($id)
     {
-        $data = array();
+        $data = NULL;
 
         $query = $this->db->where('ID', $id)->get('resources');
 
@@ -56,22 +52,13 @@ class Resources_model extends CI_Model
         return $data;
     }
 
-    /**
-     * Insert an item into resources table
-     *
-     * @access public
-     * @param  string
-     * @return
-     */
     function insert($name)
     {
-
         $data = array(
             'RESOURCE' => $name
         );
-
-        $this->db->insert('resources', $data);
-        return $this->identity();
+        return $this->db->insert('resources', $data);
+        //return $this->identity();
 
     }
 
@@ -97,12 +84,10 @@ class Resources_model extends CI_Model
      */
     function update($id, $name)
     {
-
         $data = array(
             'RESOURCE' => $name
         );
-
-        $this->db->update('resources', $data, array('ID' => $id));
+        return $this->db->update('resources', $data, array('ID' => $id));
     }
 
     /**
@@ -115,6 +100,11 @@ class Resources_model extends CI_Model
     function identity()
     {
         return $this->db->insert_id();
+    }
+
+    function error_consulta()
+    {
+        return $this->db->error();
     }
 }
 

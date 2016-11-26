@@ -1,24 +1,5 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-/**
- * CodeIgniter status message Helpers
- *
- * @package        Application
- * @subpackage    Helpers
- * @category    Helpers
- */
-
-
-// ------------------------------------------------------------------------
-/**
- * Constants of message types
- */
-
-define("FLASH_MSG_SUCCESS", 0);
-define("FLASH_MSG_ERROR", 1);
-
-// ------------------------------------------------------------------------
-
 if (!function_exists('set_bootstrap_alert')) {
     function set_bootstrap_alert($text_input, $type = BOOTSTRAP_ALERT_SUCCESS)
     {

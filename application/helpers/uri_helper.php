@@ -16,3 +16,14 @@ if (!function_exists('base_url_lang')) {
         return base_url() . $CI->config->item('language_abbr') . '/';
     }
 }
+
+if (!function_exists('anchor_sin_url')) {
+    function anchor_sin_url($title = 'Tittle', $attributes = '')
+    {
+        if ($attributes !== '')
+        {
+            $attributes = _stringify_attributes($attributes);
+        }
+        return '<a '.$attributes.'>'.$title.'</a>';
+    }
+}

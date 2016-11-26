@@ -12,7 +12,7 @@ class Menu_model extends CI_Model
 
     function generateTree(&$tree, $parentid = 0)
     {
-        $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr');
+        $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr, icon');
         $this->db->where('parentid', $parentid);
         $this->db->where('status', 'active');
         $this->db->order_by('orderr asc, parentid asc');
@@ -32,13 +32,12 @@ class Menu_model extends CI_Model
 
     function generateallTree(&$tree, $parentid = 0)
     {
-        $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr');
+        $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr, icon');
         $this->db->where('parentid', $parentid);
         $this->db->order_by('orderr asc, parentid asc');
         $res = $this->db->get('menu');
         if ($res->num_rows() > 0) {
             foreach ($res->result_array() as $r) {
-
                 // push found result onto existing tree
                 $tree[$r['id']] = $r;
                 // create placeholder for children
@@ -55,7 +54,7 @@ class Menu_model extends CI_Model
     function generateallActiveTreeArray()
     {
         $tree = array();
-        $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr');
+        $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr, icon');
         $this->db->where('status', 'active');
         $this->db->order_by('parentid asc, orderr asc');
         $query = $this->db->get('menu');
@@ -75,7 +74,7 @@ class Menu_model extends CI_Model
        */
     function generateallActiveTree(&$tree, $parentid = 0)
     {
-        $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr');
+        $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr, icon');
         $this->db->where('parentid', $parentid);
         $this->db->where('status', 'active');
         $this->db->order_by('orderr asc, parentid asc');
@@ -93,10 +92,9 @@ class Menu_model extends CI_Model
         }
     }
 
-
     function generateallActiveTreeByUser(&$tree, $userid, $parentid = 0)
     {
-        $sql = "select id,name,shortdesc,status,parentid,page_uri,`orderr`, menu.resourceid, acluser.RESOURCEID from menu left join (SELECT acl.RESOURCEID FROM usersgroups ug inner join accesscontrollist acl on ug.GROUPID = acl.TARGETID and acl.TYPEID = 1 inner join resources r on r.ID = acl.RESOURCEID inner join groups g on g.ID = ug.GROUPID where ug.USERID = ? and g.ENABLE = 1 UNION SELECT acl.RESOURCEID from accesscontrollist acl inner join resources r on r.ID = acl.RESOURCEID inner join users u on u.ID = acl.TARGETID where acl.TARGETID = ? and acl.TYPEID = 2 and u.ENABLE = 1 ) acluser on acluser.RESOURCEID = menu.resourceid where parentid = ? and status = 'active' and (acluser.resourceid is not null or menu.resourceid is null) orderr by `orderr`, parentid asc";
+        $sql = "select id,name,shortdesc,status,parentid,page_uri,orderr, menu.resourceid, acluser.RESOURCEID, icon from menu left join (SELECT acl.RESOURCEID FROM usersgroups ug inner join accesscontrollist acl on ug.GROUPID = acl.TARGETID and acl.TYPEID = 1 inner join resources r on r.ID = acl.RESOURCEID inner join groups g on g.ID = ug.GROUPID where ug.USERID = ? and g.ENABLE = 1 UNION SELECT acl.RESOURCEID from accesscontrollist acl inner join resources r on r.ID = acl.RESOURCEID inner join users u on u.ID = acl.TARGETID where acl.TARGETID = ? and acl.TYPEID = 2 and u.ENABLE = 1 ) acluser on acluser.RESOURCEID = menu.resourceid where parentid = ? and status = 'active' and (acluser.resourceid is not null or menu.resourceid is null) orderr by `orderr`, parentid asc";
         $res = $this->db->query($sql, array($userid, $userid, $parentid));
         if ($res->num_rows() > 0) {
             foreach ($res->result_array() as $r) {
@@ -113,15 +111,12 @@ class Menu_model extends CI_Model
 
     function generateTree1(&$tree, $parentid = 0)
     {
-
         $this->db->join('omc_page', 'menu.id = omc_page.menu_id');
         $this->db->where('parentid', $parentid);
-
         $this->db->order_by('orderr asc, parentid asc');
         $res = $this->db->get('menu');
         if ($res->num_rows() > 0) {
             foreach ($res->result_array() as $r) {
-
                 $tree[$r['id']] = $r;
                 $tree[$r['id']]['children'] = array();
                 $this->generateTree($tree[$r['id']]['children'], $r['id']);
@@ -132,13 +127,11 @@ class Menu_model extends CI_Model
     function getMenu($id)
     {
         $data = array();
-        $options = array('id' => id_clean($id));
-
+        $options = array('id' => $id);
         $Q = $this->db->where($options, 1)->get('menu');
         if ($Q->num_rows() > 0) {
             $data = $Q->row_array();
         }
-
         $Q->free_result();
         return $data;
     }
@@ -181,13 +174,10 @@ class Menu_model extends CI_Model
         $Q = $this->db->get('menu');
         if ($Q->num_rows() > 0) {
             foreach ($Q->result() as $row) {
-
                 if ($row->parentid > 0) {
                     $data[0][$row->parentid]['children'][$row->id] = $row->name;
-
                 } else {
                     $data[0][$row->id]['name'] = $row->name;
-
                 }
             }
         }
@@ -237,48 +227,46 @@ class Menu_model extends CI_Model
         return $data;
     }
 
-    function addMenu($name, $shortdesc, $status, $parentid, $order, $page_uri, $resourceId = null)
+    function addMenu($name, $shortdesc, $status, $parentid, $order, $page_uri, $resourceId = null, $icon)
     {
         $data = array(
-            'name' => ($name),
-            'shortdesc' => ($shortdesc),
-            'status' => ($status),
-            'parentid' => ($parentid),
-            'orderr' => ($order),
-            'page_uri' => ($page_uri)
+            'name' => $name,
+            'shortdesc' => $shortdesc,
+            'status' => $status,
+            'parentid' => $parentid,
+            'orderr' => $order,
+            'page_uri' => $page_uri,
+            'icon' => $icon
         );
 
         if ($resourceId != null) {
             $data['resourceid'] = $resourceId;
         }
 
-        $this->db->insert('menu', $data);
-        return $this->identity();
+        return $this->db->insert('menu', $data);
     }
 
     function updateMenu($id, $name, $shortdesc, $status, $parentid, $order, $page_uri, $resourceId = null, $icon)
     {
         $data = array(
-            'name' => db_clean($name),
-            'shortdesc' => db_clean($shortdesc),
-            'status' => db_clean($status, 8),
-            'orderr' => id_clean($order, 10),
-            'parentid' => id_clean($parentid),
-            'page_uri' => db_clean($page_uri),
+            'name' => $name,
+            'shortdesc' => $shortdesc,
+            'status' => $status,
+            'orderr' => $order,
+            'parentid' => $parentid,
+            'page_uri' => $page_uri,
             'resourceid' => $resourceId,
             'icon' => $icon,
         );
-
-        $this->db->where('id', id_clean($id));
-        $this->db->update('menu', $data);
-
+        $this->db->where('id', $id);
+        return $this->db->update('menu', $data);
     }
 
     function deleteMenu($id)
     {
         // $data = array('status' => 'inactive');
-        $this->db->where('id', id_clean($id));
-        $this->db->delete('menu');
+        $this->db->where('id', $id);
+        return $this->db->delete('menu');
     }
 
     function changeMenuStatus($id)
@@ -288,20 +276,15 @@ class Menu_model extends CI_Model
         $menuinfo = $this->getMenu($id);
         $status = $menuinfo['status'];
         if ($status == 'active') {
-
             $data = array('status' => 'inactive');
-            $this->db->where('id', id_clean($id));
+            $this->db->where('id', $id);
             $this->db->update('menu', $data);
-
         } else {
-
             $data = array('status' => 'active');
-            $this->db->where('id', id_clean($id));
+            $this->db->where('id', $id);
             $this->db->update('menu', $data);
         }
-
     }
-
 
     function changeMenuOrphansStatus($id)
     {
@@ -309,11 +292,11 @@ class Menu_model extends CI_Model
         $menuinfo = $this->getMenu($id);
         $status = $menuinfo['status'];
         if ($status == 'active') {
-
             $data = array('status' => 'inactive');
-            $this->db->where('parentid', id_clean($id));
-            $this->db->update('menu', $data);
+            $this->db->where('parentid', $id);
+            return $this->db->update('menu', $data);
         }
+        return TRUE;
     }
 
 
@@ -324,39 +307,46 @@ class Menu_model extends CI_Model
         return $this->dbutil->csv_from_result($Q, ",", "\n");
     }
 
-    function checkMenuOrphans($id)
+    function checkMenuOrphans($id = 0)
     {
         $data = array();
         $this->db->select('id,name');
-        $this->db->where('parentid', id_clean($id));
+        $this->db->where('parentid', $id);
         $Q = $this->db->get('menu');
         if ($Q->num_rows() > 0) {
-            foreach ($Q->result_array() as $row) {
-                $data[$row['id']] = $row['name'];
-            }
+            $data = $Q->result();
         }
-        $Q->free_result();
         return $data;
 
     }
 
 
-    function changeMenuOrphansParent($id)
+    function changeMenuOrphansParent($id = 0)
     {
         $data = array('parentid' => '-1');
-        $this->db->where('parentid', id_clean($id));
-        $this->db->update('menu', $data);
+        $this->db->where('parentid', $id);
+        return $this->db->update('menu', $data);
     }
 
-    /**
-     * Return last id inserted
-     *
-     * @access public
-     * @return int
-     */
+    function revertChangeMenuOrphansParent($id, $orphans = array())
+    {
+        $last = '';
+        foreach ($orphans as $orphan){
+            $data = array('parentid' => $id);
+            $this->db->where('id', $orphan->id);
+            $last = $this->db->update('menu', $data);
+        }
+        return $last;
+    }
+
     function identity()
     {
         return $this->db->insert_id();
+    }
+
+    function error_consulta()
+    {
+        return $this->db->error();
     }
 
     function generateallActiveTreeArrayByUser($userid)
