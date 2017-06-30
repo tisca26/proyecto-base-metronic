@@ -58,7 +58,7 @@ $autoload['packages'] = array();
 |
 |	$autoload['libraries'] = array('user_agent' => 'ua');
 */
-$autoload['libraries'] = array('database','session', 'encrypt','auth_acl', 'menu_manager', 'cargar_idioma');
+$autoload['libraries'] = array('database','cargar_elementos_manager', 'menu_manager', 'session', 'encryption', 'auth_lib', 'form_validation');
 
 /*
 | -------------------------------------------------------------------
@@ -89,7 +89,7 @@ $autoload['drivers'] = array();
 |
 |	$autoload['helper'] = array('url', 'file');
 */
-$autoload['helper'] = array('language', 'url', 'html', 'form', 'cookie', 'uri', 'site_template', 'alert', 'util', 'session');
+$autoload['helper'] = array('language','url','html','form','uri','alert','util','session','menu');
 
 /*
 | -------------------------------------------------------------------
@@ -103,7 +103,7 @@ $autoload['helper'] = array('language', 'url', 'html', 'form', 'cookie', 'uri', 
 | config files.  Otherwise, leave it blank.
 |
 */
-$autoload['config'] = array('template');
+$autoload['config'] = array();
 
 /*
 | -------------------------------------------------------------------

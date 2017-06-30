@@ -1,197 +1,141 @@
-<?php
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-if (!defined('BASEPATH'))
-    exit('No direct script access allowed');
+include "Privy.php";
 
-include("Acl_controller.php");
-
-class Users extends Acl_controller
+class Users extends Privy
 {
-
-    private $template_base = 'index';
-
-    /**
-     * Constructor
-     *
-     * @access public
-     */
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
-
-        $this->set_read_list(array('index', 'nick_exist', 'sucursal_asociate'));
-        $this->set_insert_list(array('insert_user', 'form_insert'));
-        $this->set_update_list(array('edit_user', 'form_edit', 'change_password', 'form_password'));
-        $this->set_delete_list(array('delete_user'));
-
+        $this->set_read_list(array('index'));
+        $this->set_insert_list(array('insertar', 'frm_insertar'));
+        $this->set_update_list(array('editar', 'frm_editar'));
+        $this->set_delete_list(array('borrar', 'borrado_final'));
         $this->check_access();
-
-        $this->load->model('users_model');
-        $this->load->library('form_validation');
-        $this->load->model('catalogos_model');
+        $this->load->library('business/User');
     }
 
-    /**
-     * Default Action. Listing user collection
-     *
-     * @access public
-     */
-    function index()
+    public function index()
     {
-        $this->cargar_idioma->carga_lang('users/users_index');
-        $data = array();
-        $data['rows'] = $this->users_model->get_all();
-        $template['_B'] = 'users/users_index.php';
-        $this->load->template_view($this->template_base, $data, $template);
+        $data['usuarios'] = $this->user->usuarios_todos();
+        $this->load->view('users/users_index', $data);
     }
 
-    function insert_user()
+    public function insertar()
     {
-        $this->cargar_idioma->carga_lang('users/users_inserta');
-        $name = $this->input->post('nombre');
-        $apellido = $this->input->post('apellidos');
-        $email = $this->input->post('correo');
-        $nick = $this->input->post('nick');
+        $this->load->library('business/Group');
+        $data['grupos'] = $this->group->grupos_todos();
+        $this->load->view('users/users_insertar', $data);
+    }
+
+    public function frm_insertar()
+    {
+        $this->form_validation->set_rules('nombre', 'Nombre', 'required|min_length[3]');
+        $this->form_validation->set_rules('apellido_paterno', 'Apellido Paterno', 'required|min_length[3]');
+        $this->form_validation->set_rules('apellido_materno', 'Apellido Materno', 'required|min_length[3]');
+        $this->form_validation->set_rules('username', 'Username', 'required|min_length[3]');
+        $this->form_validation->set_rules('email', 'Email', 'required|valid_email');
+        if ($this->form_validation->run() == FALSE) {
+            $this->insertar();
+        } else {
+            $usuario = $this->input->post();
+            $grupos = $usuario['groups'];
+            unset($usuario['groups']);
+            unset($usuario['repasswd']);
+            $usuario['passwd'] = $this->_genera_contraseña($usuario['passwd']);
+            $usuario['estatus'] = isset($usuario['estatus']) ? 1 : 0;
+            if ($this->user->insertar_con_grupos($usuario, $grupos)) {
+                $msg = "El usuario se guardó con éxito, inserte otro o <strong><a href='" . base_url('users') . "'>vuela al inicio</a></strong>";
+                set_bootstrap_alert($msg, BOOTSTRAP_ALERT_SUCCESS);
+            } else {
+                $msg = "Error al guardar el usuario, intente nuevamente";
+                set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
+            }
+            redirect('users/insertar');
+        }
+    }
+
+    public function editar($id = 0)
+    {
+        if (!valid_id($id)) {
+            $msg = 'Error en el identificador';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
+            redirect('users');
+        }
+        $this->load->library('business/Group');
+        $data['grupos'] = $this->group->grupos_todos();
+        $data['usuario'] = $this->user->usuario_por_id($id);
+        $this->load->view('users/users_editar', $data);
+    }
+
+    public function frm_editar()
+    {
+        $this->form_validation->set_rules('usuarios_id', 'Identificador', 'required|integer');
+        $this->form_validation->set_rules('nombre', 'Nombre', 'required|min_length[3]');
+        $this->form_validation->set_rules('apellido_paterno', 'Apellido Paterno', 'required|min_length[3]');
+        $this->form_validation->set_rules('apellido_materno', 'Apellido Materno', 'required|min_length[3]');
+        $this->form_validation->set_rules('username', 'Username', 'required|min_length[3]');
+        $this->form_validation->set_rules('email', 'Email', 'required|valid_email');
+        if ($this->form_validation->run() == FALSE) {
+            $this->editar($this->input->post('usuarios_id'));
+        } else {
+            $usuario = $this->input->post();
+            $grupos = $usuario['groups'];
+            unset($usuario['groups']);
+            unset($usuario['repasswd']);
+            $usuario['estatus'] = isset($usuario['estatus']) ? 1 : 0;
+            if ($usuario['passwd'] !== '') {
+                $usuario['passwd'] = $this->_genera_contraseña($usuario['passwd']);
+            } else {
+                unset($usuario['passwd']);
+            }
+            if ($this->user->editar_con_grupos($usuario, $grupos)) {
+                $msg = "El usuario se guardó con éxito";
+                set_bootstrap_alert($msg, BOOTSTRAP_ALERT_SUCCESS);
+                redirect('users');
+            } else {
+                $msg = "Error al guardar el usuario, intente nuevamente";
+                set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
+                redirect('users/editar/' . $usuario['usuarios_id']);
+            }
+        }
+    }
+
+    private function _genera_contraseña($passwd = '')
+    {
         $opciones = [
             'cost' => 10,
         ];
-        $paswd = password_hash($this->input->post('password'), PASSWORD_BCRYPT, $opciones);
-        $enable = ($this->input->post('enableuser') == FALSE) ? FALSE : TRUE;
-        $id = 0;
-        if ($this->users_model->insert($nick, $paswd, $name, $apellido, $email, $enable) == TRUE) {
-            $id = $this->users_model->identity();
-            $group = $this->input->post('radio_group');
-            if ($this->users_model->insert_group_relation($id, $group) == TRUE) {
-                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
-                return redirect('users/form_insert');
-            } else {
-                $this->users_model->delete($id);
-                $error = $this->users_model->error_consulta();
-                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
-                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-                return $this->form_insert();
-            }
+        return password_hash($passwd, PASSWORD_BCRYPT, $opciones);
+    }
+
+    public function borrar($id = 0)
+    {
+        if (!valid_id($id)) {
+            return redirect('users');
+        }
+        if ($this->user->editar(array('usuarios_id' => $id, 'estatus' => '0')) !== false) {
+            $msg = 'Se borró el registro con éxito';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_SUCCESS);
         } else {
-            $error = $this->users_model->error_consulta();
-            $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
-            set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-            return $this->form_insert();
+            $msg = 'Error al borrar el registro, intente nuevamente';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
         }
+        redirect('users');
     }
 
-    function edit_user()
+    public function borrado_final($id = 0)
     {
-        $this->cargar_idioma->carga_lang('users/users_edita');
-        $id = $this->input->post('userid');
-        $name = $this->input->post('nombre');
-        $apellido = $this->input->post('apellidos');
-        $email = $this->input->post('correo');
-        $nick = $this->input->post('nick');
-        $enable = ($this->input->post('enableuser') == FALSE) ? FALSE : TRUE;
-        if ($this->users_model->update_all($id, $nick, $name, $apellido, $email, $enable) == TRUE){
-            $group = $this->input->post('radio_group');
-            if ($this->users_model->update_group_relation($id, $group) == TRUE){
-                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
-                return redirect('users');
-            }
+        if (!valid_id($id)) {
+            return redirect('users');
         }
-        $error = $this->users_model->error_consulta();
-        $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
-        set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-        return $this->form_edit($id);
-    }
-
-    function change_password()
-    {
-
-        $this->form_validation->set_rules('password', lang('label_password'), 'required');
-        $this->form_validation->set_rules('repassword', lang('label_repassword'), 'required|matches[password]');
-
-        $this->form_validation->set_error_delimiters('<div class="error">', '</div>');
-        $id = $this->input->post('userid');
-
-        if ($this->form_validation->run() == FALSE) {
-            $this->form_password($id);
+        if ($this->user->borrado_final(array('usuarios_id' => $id))) {
+            $msg = 'Se borró el registro con éxito';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_SUCCESS);
         } else {
-
-            $password = sha1($this->input->post('password'));
-
-            $this->users_model->update_password($id, $password);
-
-            $data['m_tipo'] = 'Ok edit pass';
-            $data['m_titulo'] = 'Usuarios';
-            $data['m_mensaje'] = 'La contraseña se editó con éxito';
-            $this->session->set_flashdata('m_tipo', $data['m_tipo']);
-            $this->session->set_flashdata('m_titulo', $data['m_titulo']);
-            $this->session->set_flashdata('m_mensaje', $data['m_mensaje']);
-            redirect('users/form_edit/' . $id);
+            $msg = 'Error al borrar el registro, intente nuevamente';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
         }
-    }
-
-    function delete_user($id)
-    {
-
-        $this->users_model->delete($id);
-
-        $data['m_tipo'] = 'Ok delete';
-        $data['m_titulo'] = 'Usuarios';
-        $data['m_mensaje'] = 'El usuario se eliminó con éxito';
-        $this->session->set_flashdata('m_tipo', $data['m_tipo']);
-        $this->session->set_flashdata('m_titulo', $data['m_titulo']);
-        $this->session->set_flashdata('m_mensaje', $data['m_mensaje']);
-        redirect('users/');
-    }
-
-    function nick_exist()
-    {
-        $nick = $this->input->post('nick');
-        $id = ($this->input->post('userid') == FALSE) ? -1 : $this->input->post('userid');
-        echo $this->users_model->nick_exist($nick, $id);
-    }
-
-    function val_nick_exist($nick)
-    {
-        $id = ($this->input->post('userid') == FALSE) ? -1 : $this->input->post('userid');
-        if ($this->users_model->nick_exist($nick, $id)) {
-            $this->form_validation->set_message('val_nick_exist', lang('val_exist'));
-            return FALSE;
-        } else
-            return TRUE;
-    }
-
-    function form_insert()
-    {
-        $this->cargar_idioma->carga_lang('users/users_inserta');
-        $data['groups'] = $this->load_groups_options();
-        $template['_B'] = 'users/users_insertar.php';
-        $this->load->template_view($this->template_base, $data, $template);
-    }
-
-    function form_edit($id = 0)
-    {
-        $this->cargar_idioma->carga_lang('users/users_edita');
-        $data['user'] = $this->users_model->get_user($id);
-        $data['groups'] = $this->load_groups_options();
-        $data['usergroups'] = $this->users_model->get_user_group($id);
-
-        $tamplate['_B'] = 'users/users_editar.php';
-        $this->load->template_view($this->template_base, $data, $tamplate);
-    }
-
-    function form_password($id = 0)
-    {
-        $data['id'] = $id;
-        $data['submitdata'] = 'users/change_password';
-
-        $tamplate['_B'] = 'users/change_password_view.php';
-        $this->load->template_view($this->template_base, $data, $tamplate);
-    }
-
-    private function load_groups_options()
-    {
-        $this->load->model('groups_model');
-        return $this->groups_model->get_all();
+        redirect('users');
     }
 }
-
-?>

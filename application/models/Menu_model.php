@@ -1,16 +1,23 @@
-<?php
-if (!defined('BASEPATH'))
-    exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Menu_model extends CI_Model
 {
-
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
     }
 
-    function generateTree(&$tree, $parentid = 0)
+    public function ultimo_id()
+    {
+        return $this->db->insert_id();
+    }
+
+    public function error_consulta()
+    {
+        return $this->db->error();
+    }
+
+    public function generateTree(&$tree, $parentid = 0)
     {
         $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr, icon');
         $this->db->where('parentid', $parentid);
@@ -30,28 +37,27 @@ class Menu_model extends CI_Model
         }
     }
 
-    function generateallTree(&$tree, $parentid = 0)
+    /*
+     * Uso en Menu Controller
+     */
+    public function generateallTree(&$tree, $parentid = 0)
     {
-        $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr, icon');
-        $this->db->where('parentid', $parentid);
-        $this->db->order_by('orderr asc, parentid asc');
+        $this->db->where('parent_id', $parentid);
+        $this->db->order_by('orden asc, parent_id asc');
         $res = $this->db->get('menu');
         if ($res->num_rows() > 0) {
             foreach ($res->result_array() as $r) {
                 // push found result onto existing tree
-                $tree[$r['id']] = $r;
+                $tree[$r['menu_id']] = $r;
                 // create placeholder for children
-                $tree[$r['id']]['children'] = array();
+                $tree[$r['menu_id']]['children'] = array();
                 // find any children of currently found child
-                $this->generateallTree($tree[$r['id']]['children'], $r['id']);
+                $this->generateallTree($tree[$r['menu_id']]['children'], $r['menu_id']);
             }
         }
     }
 
-    /*
-        * Get all active tree to generate menu as array
-        */
-    function generateallActiveTreeArray()
+    public function generateallActiveTreeArray()
     {
         $tree = array();
         $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr, icon');
@@ -68,11 +74,10 @@ class Menu_model extends CI_Model
         return $tree;
     }
 
-
     /*
-       * Get all active tree to generate menu using recursive method
-       */
-    function generateallActiveTree(&$tree, $parentid = 0)
+    * Get all active tree to generate menu using recursive method
+    */
+    public function generateallActiveTree(&$tree, $parentid = 0)
     {
         $this->db->select('id,name,shortdesc,status,parentid,page_uri,orderr, icon');
         $this->db->where('parentid', $parentid);
@@ -92,7 +97,7 @@ class Menu_model extends CI_Model
         }
     }
 
-    function generateallActiveTreeByUser(&$tree, $userid, $parentid = 0)
+    public function generateallActiveTreeByUser(&$tree, $userid, $parentid = 0)
     {
         $sql = "select id,name,shortdesc,status,parentid,page_uri,orderr, menu.resourceid, acluser.RESOURCEID, icon from menu left join (SELECT acl.RESOURCEID FROM usersgroups ug inner join accesscontrollist acl on ug.GROUPID = acl.TARGETID and acl.TYPEID = 1 inner join resources r on r.ID = acl.RESOURCEID inner join groups g on g.ID = ug.GROUPID where ug.USERID = ? and g.ENABLE = 1 UNION SELECT acl.RESOURCEID from accesscontrollist acl inner join resources r on r.ID = acl.RESOURCEID inner join users u on u.ID = acl.TARGETID where acl.TARGETID = ? and acl.TYPEID = 2 and u.ENABLE = 1 ) acluser on acluser.RESOURCEID = menu.resourceid where parentid = ? and status = 'active' and (acluser.resourceid is not null or menu.resourceid is null) orderr by `orderr`, parentid asc";
         $res = $this->db->query($sql, array($userid, $userid, $parentid));
@@ -109,7 +114,7 @@ class Menu_model extends CI_Model
         }
     }
 
-    function generateTree1(&$tree, $parentid = 0)
+    public function generateTree1(&$tree, $parentid = 0)
     {
         $this->db->join('omc_page', 'menu.id = omc_page.menu_id');
         $this->db->where('parentid', $parentid);
@@ -124,46 +129,48 @@ class Menu_model extends CI_Model
         }
     }
 
-    function getMenu($id)
+    /*
+     * Uso en Menu Controller
+     */
+    public function menu_por_id($id = 0)
     {
-        $data = array();
-        $options = array('id' => $id);
-        $Q = $this->db->where($options, 1)->get('menu');
+        $data = null;
+        $Q = $this->db->where('menu_id', $id)->get('menu');
         if ($Q->num_rows() > 0) {
-            $data = $Q->row_array();
+            $data = $Q->row();
         }
         $Q->free_result();
         return $data;
     }
 
-    function getAllMenus()
+    public function getAllMenus()
     {
-        // This is used to show menus in home tables
         $data = array();
         $Q = $this->db->get('menu');
         if ($Q->num_rows() > 0) {
-            foreach ($Q->result_array() as $row) {
-                $data[] = $row;
-            }
+            $data = $Q->result();
         }
         $Q->free_result();
         return $data;
     }
 
-    function getAllMenusDisplay()
+    /*
+     * Uso en Menu Controller
+     */
+    public function getAllMenusDisplay()
     {
         $data[0] = 'root';
         $Q = $this->db->get('menu');
         if ($Q->num_rows() > 0) {
             foreach ($Q->result_array() as $row) {
-                $data[$row['id']] = $row['name'];
+                $data[$row['menu_id']] = $row['nombre'];
             }
         }
         $Q->free_result();
         return $data;
     }
 
-    function getMenusNav()
+    public function getMenusNav()
     {
         $data = array();
         $this->db->select('id,name,parentid');
@@ -185,7 +192,7 @@ class Menu_model extends CI_Model
         return $data;
     }
 
-    function getMenusDropDown()
+    public function getMenusDropDown()
     {
         $data = array();
         $this->db->select('id,name');
@@ -200,7 +207,7 @@ class Menu_model extends CI_Model
         return $data;
     }
 
-    function getTopMenus()
+    public function getTopMenus()
     {
         $data[0] = 'root';
         $this->db->where('parentid', 0);
@@ -214,7 +221,7 @@ class Menu_model extends CI_Model
         return $data;
     }
 
-    function getrootMenus()
+    public function getrootMenus()
     {
         $this->db->where('parentid', 0);
         $Q = $this->db->get('menu');
@@ -227,155 +234,121 @@ class Menu_model extends CI_Model
         return $data;
     }
 
-    function addMenu($name, $shortdesc, $status, $parentid, $order, $page_uri, $resourceId = null, $icon)
+    /*
+     * Uso en Menu Controller
+     */
+    public function insertar($menu = array())
     {
-        $data = array(
-            'name' => $name,
-            'shortdesc' => $shortdesc,
-            'status' => $status,
-            'parentid' => $parentid,
-            'orderr' => $order,
-            'page_uri' => $page_uri,
-            'icon' => $icon
-        );
-
-        if ($resourceId != null) {
-            $data['resourceid'] = $resourceId;
-        }
-
-        return $this->db->insert('menu', $data);
+        return $this->db->insert('menu', $menu);
     }
 
-    function updateMenu($id, $name, $shortdesc, $status, $parentid, $order, $page_uri, $resourceId = null, $icon)
+    /*
+     * Uso en Menu Controller
+     */
+    public function editar($menu = array())
     {
-        $data = array(
-            'name' => $name,
-            'shortdesc' => $shortdesc,
-            'status' => $status,
-            'orderr' => $order,
-            'parentid' => $parentid,
-            'page_uri' => $page_uri,
-            'resourceid' => $resourceId,
-            'icon' => $icon,
-        );
-        $this->db->where('id', $id);
-        return $this->db->update('menu', $data);
+        return $this->db->update('menu', $menu, array('menu_id' => $menu['menu_id']));
     }
 
-    function deleteMenu($id)
+    /*
+     * Uso en Menu Controller
+     */
+    public function borrar($menu = array())
     {
-        // $data = array('status' => 'inactive');
-        $this->db->where('id', $id);
-        return $this->db->delete('menu');
+        return $this->db->delete('menu', $menu);
     }
 
-    function changeMenuStatus($id)
+    /*
+     * Uso en Menu Controller
+     */
+    public function changeMenuStatus($id = 0)
     {
-        // getting status of page
-        $menuinfo = array();
-        $menuinfo = $this->getMenu($id);
-        $status = $menuinfo['status'];
-        if ($status == 'active') {
-            $data = array('status' => 'inactive');
-            $this->db->where('id', $id);
-            $this->db->update('menu', $data);
+        $menuinfo = $this->menu_por_id($id);
+        if ($menuinfo->estatus == '1') {
+            return $this->db->update('menu', array('estatus' => '0'), array('menu_id' => $id));
         } else {
-            $data = array('status' => 'active');
-            $this->db->where('id', $id);
-            $this->db->update('menu', $data);
+            return $this->db->update('menu', array('estatus' => '1'), array('menu_id' => $id));
         }
     }
 
-    function changeMenuOrphansStatus($id)
+    /*
+     * Uso en Menu Controller
+     */
+    public function changeMenuOrphansStatus($id = 0)
     {
-        $menuinfo = array();
-        $menuinfo = $this->getMenu($id);
-        $status = $menuinfo['status'];
-        if ($status == 'active') {
-            $data = array('status' => 'inactive');
-            $this->db->where('parentid', $id);
-            return $this->db->update('menu', $data);
+        $menuinfo = $this->menu_por_id($id);
+        if ($menuinfo->estatus == '1') {
+            return $this->db->update('menu', array('estatus' => '0'), array('parent_id' => $id));
         }
-        return TRUE;
+        return true;
     }
 
-
-    function exportCsv()
-    {
-        $this->load->dbutil();
-        $Q = $this->db->query("select * from menu");
-        return $this->dbutil->csv_from_result($Q, ",", "\n");
-    }
-
-    function checkMenuOrphans($id = 0)
+    /*
+     * Uso en Menu Controller
+     */
+    public function checkMenuOrphans($id = 0)
     {
         $data = array();
-        $this->db->select('id,name');
-        $this->db->where('parentid', $id);
+        $this->db->select('menu_id, nombre');
+        $this->db->where('parent_id', $id);
         $Q = $this->db->get('menu');
         if ($Q->num_rows() > 0) {
             $data = $Q->result();
         }
         return $data;
-
     }
 
-
-    function changeMenuOrphansParent($id = 0)
+    /*
+     * Uso en Menu Controller
+     */
+    public function changeMenuOrphansParent($id = 0)
     {
-        $data = array('parentid' => '-1');
-        $this->db->where('parentid', $id);
+        $data = array('parent_id' => '-1');
+        $this->db->where('parent_id', $id);
         return $this->db->update('menu', $data);
     }
 
-    function revertChangeMenuOrphansParent($id, $orphans = array())
+    /*
+     * Uso en Menu Controller
+     */
+    public function revertChangeMenuOrphansParent($id = 0, $orphans = array())
     {
         $last = '';
-        foreach ($orphans as $orphan){
-            $data = array('parentid' => $id);
-            $this->db->where('id', $orphan->id);
+        foreach ($orphans as $orphan) {
+            $data = array('parent_id' => $id);
+            $this->db->where('menu_id', $orphan->id);
             $last = $this->db->update('menu', $data);
         }
         return $last;
     }
 
-    function identity()
-    {
-        return $this->db->insert_id();
-    }
-
-    function error_consulta()
-    {
-        return $this->db->error();
-    }
-
-    function generateallActiveTreeArrayByUser($userid)
+    /*
+     * Uso en Menu manager
+     */
+    public function generateallActiveTreeArrayByUser($userid)
     {
         $tree = array();
-
-        $sql = 'select id,name,shortdesc,status,parentid,page_uri, menu.orderr, menu.resourceid, acluser.RESOURCEID, icon
+        $sql = 'select menu.*, acluser.RESOURCEID
                 from menu left join
                 (SELECT acl.RESOURCEID FROM usersgroups ug
-                inner join accesscontrollist acl on ug.GROUPID = acl.TARGETID and acl.TYPEID = 1
-                inner join resources r on r.ID = acl.RESOURCEID
-                inner join groups g on g.ID = ug.GROUPID
-                where ug.USERID = ? and g.ENABLE = 1
+                inner join accesscontrollist acl on ug.groups_id = acl.TARGETID and acl.TYPEID = 1
+                inner join resources r on r.resources_id = acl.RESOURCEID
+                inner join groups g on g.groups_id = ug.groups_id
+                where ug.usuarios_id = ? and g.estatus = 1
                 UNION SELECT acl.RESOURCEID
                 from accesscontrollist acl
-                inner join resources r on r.ID = acl.RESOURCEID
-                inner join users u on u.ID = acl.TARGETID
-                where acl.TARGETID = ? and acl.TYPEID = 2 and u.ENABLE = 1 ) acluser on acluser.RESOURCEID = menu.resourceid
-                where (menu.status = ? and acluser.RESOURCEID is not null or menu.resourceid is null)
-                order by parentid asc, menu.orderr asc';
-        $query = $this->db->query($sql, array($userid, $userid, 'active'));
+                inner join resources r on r.resources_id = acl.RESOURCEID
+                inner join usuarios u on u.usuarios_id = acl.TARGETID
+                where acl.TARGETID = ? and acl.TYPEID = 2 and u.estatus = 1 ) acluser on acluser.RESOURCEID = menu.resource_id
+                where (menu.estatus = ? and acluser.RESOURCEID is not null or menu.resource_id is null)
+                order by menu.parent_id asc, menu.orden asc';
+        $query = $this->db->query($sql, array($userid, $userid, 1));
         if ($query->num_rows() > 0) {
             foreach ($query->result() as $row) {
-                $index = (isset($tree[$row->parentid])) ? count($tree[$row->parentid]) : 0;
-                $tree[$row->parentid][$index] = $row;
+                $index = (isset($tree[$row->parent_id])) ? count($tree[$row->parent_id]) : 0;
+                $tree[$row->parent_id][$index] = $row;
             }
         }
-
         return $tree;
     }
-
 }

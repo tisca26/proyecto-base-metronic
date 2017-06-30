@@ -91,3 +91,13 @@ defined('BOOTSTRAP_ALERT_SUCCESS')  OR define('BOOTSTRAP_ALERT_SUCCESS', 'succes
 defined('BOOTSTRAP_ALERT_INFO')     OR define('BOOTSTRAP_ALERT_INFO', 'info');
 defined('BOOTSTRAP_ALERT_WARNING')  OR define('BOOTSTRAP_ALERT_WARNING', 'warning');
 defined('BOOTSTRAP_ALERT_DANGER')   OR define('BOOTSTRAP_ALERT_DANGER', 'danger');
+
+/*
+ * Datos DOCS SAT
+ */
+defined('RUTA_DOCS_SAT')  OR define('RUTA_DOCS_SAT', FCPATH .'assets/docs_sat/');
+
+/*
+ * Datos DOCS USR
+ */
+defined('RUTA_DOCS_USR')  OR define('RUTA_DOCS_USR', FCPATH .'assets/docs_usr/');

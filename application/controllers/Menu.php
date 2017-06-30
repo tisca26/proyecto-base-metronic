@@ -1,259 +1,148 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-include("Acl_controller.php");
+include "Privy.php";
 
-class Menu extends Acl_controller
+class Menu extends Privy
 {
-
-
-    private $template_base = 'index';
-
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
-
-        $this->set_read_list(array('index', 'export', 'icons'));
-        $this->set_insert_list(array('insert_menu'));
-        $this->set_update_list(array('edit_menu', 'change_menu_status'));
-        $this->set_delete_list(array('delete_menu'));
-
+        $this->set_read_list(array('index'));
+        $this->set_insert_list(array('insertar', 'frm_insertar'));
+        $this->set_update_list(array('editar', 'frm_editar', 'cambiar_estatus'));
+        $this->set_delete_list(array('borrar'));
         $this->check_access();
-
-        // load modules/menus/model/mmenus
         $this->load->model('menu_model');
     }
 
-    function index()
+    public function index()
     {
-        $this->cargar_idioma->carga_lang('menu/menu_index');
         $tree = array();
-        $parentid = 0;
-        $this->menu_model->generateallTree($tree, $parentid);
+        $this->menu_model->generateallTree($tree, 0); // Parent = Root
         $data['navlist'] = $tree;
-        $template['_B'] = 'menu/menu_index.php';
-        $this->load->template_view($this->template_base, $data, $template);
+        $this->load->view('menu/menu_index', $data);
     }
 
-    function insert_menu()
+    public function insertar()
     {
-        $this->cargar_idioma->carga_lang('menu/menu_insertar');
-        // This is used in menu/menus, when you click Create new menu, then this is called
-        // 'parentid' ,'0' is in hidden in views/admin_menu_create.php
-        if ($this->input->post('name')) {
-            $name = $this->input->post('name');
-            $shortdesc = $this->input->post('shortdesc');
-            $status = ((bool)$this->input->post('status') == FALSE) ? 'inactive' : 'active';
-            $parentid = $this->input->post('parentid');
-            $order = $this->input->post('order');
-            $icon = $this->input->post('icon');
+        $this->load->model('resources_model');
+        $data['recursos'] = $this->resources_model->recursos_todos_sel();
+        $data['menus'] = $this->menu_model->getAllMenusDisplay();
+        $this->load->view('menu/menu_insertar', $data);
+    }
 
-            $radiourl = $this->input->post('radiourl');
-            if ($radiourl == 0) {
-                $res = $this->input->post('resource');
-                $page_res = $this->input->post('page_res');
-                $resource = $this->resource_name($res);
-                $page_uri = $resource . '/' . $page_res;
-            } else {
-                $page_uri = $this->input->post('page_uri');
-                $res = null;
-            }
-            if ($this->menu_model->addMenu($name, $shortdesc, $status, $parentid, $order, $page_uri, $res, $icon)) {
-                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
-                return redirect('menu/insert_menu');
-            } else {
-                $error = $this->menu_model->error_consulta();
-                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
-                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-                return redirect('menu/insert_menu');
-            }
+    public function frm_insertar()
+    {
+        $this->form_validation->set_rules('nombre', 'Nombre', 'required|min_length[3]');
+        $this->form_validation->set_rules('orden', 'Orden del menú', 'required|integer');
+        if ($this->form_validation->run() == FALSE) {
+            $this->insertar();
         } else {
-            $data['menus'] = $this->menu_model->getAllMenusDisplay();
-            $data['resources'] = $this->load_resources_options();
-            $template['_B'] = 'menu/menu_insertar.php';
-            $this->load->template_view($this->template_base, $data, $template);
+            $menu_dto = $this->input->post();
+            $menu_dto['estatus'] = (isset($menu_dto['estatus'])) ? 1 : 0;
+            if (!(bool)$menu_dto['radio_url']) {
+                $this->load->model('resources_model');
+                $menu_dto['page_uri'] = $this->resources_model->recursos_por_id($menu_dto['resource_id'])->resource;
+                $menu_dto['page_uri'] .= '/' . $menu_dto['page_res'];
+                unset($menu_dto['page_res']);
+            }
+            unset($menu_dto['radio_url']);
+            if ($this->menu_model->insertar($menu_dto)) {
+                set_bootstrap_alert("Se guardó el menú con éxito, inserte otro o <strong><a href='" . base_url('menu') . "'> vuelva al inicio</a></strong>", BOOTSTRAP_ALERT_SUCCESS);
+            } else {
+                set_bootstrap_alert("Error al guardar el menú, intente nuevamente", BOOTSTRAP_ALERT_SUCCESS);
+            }
         }
+        redirect('menu/insertar');
     }
 
-    function edit_menu($id = 0)
+    public function editar($id = 0)
     {
-        $this->cargar_idioma->carga_lang('menu/menu_editar');
-        // This is for editing Menu, such as Main menu etc
-        if ($this->input->post('name')) {
-            $menuid = $this->input->post('menuid');
-            $name = $this->input->post('name');
-            $shortdesc = $this->input->post('shortdesc');
-            $status = ((bool)$this->input->post('status') == FALSE) ? 'inactive' : 'active';
-            $parentid = $this->input->post('parentid');
-            $order = $this->input->post('order');
-            $icon = $this->input->post('icon');
-            $radiourl = $this->input->post('radiourl');
-            if ($radiourl == 0) {
-                $res = $this->input->post('resource');
-                $page_res = $this->input->post('page_res');
-                $resource = $this->resource_name($res);
-                $page_uri = $resource . '/' . $page_res;
-            } else {
-                $page_uri = $this->input->post('page_uri');
-                $res = null;
-            }
-            if ($this->menu_model->updateMenu($menuid, $name, $shortdesc, $status, $parentid, $order, $page_uri, $res, $icon)) {
-                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
-                return redirect('menu/');
-            } else {
-                $error = $this->menu_model->error_consulta();
-                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
-                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-                return redirect('menu/edit_menu' . $menuid);
-            }
+        if (!valid_id($id)) {
+            redirect('menu');
+        }
+        $this->load->model('resources_model');
+        $data['recursos'] = $this->resources_model->recursos_todos_sel();
+        $data['menus'] = $this->menu_model->getAllMenusDisplay();
+        $data['menu'] = $this->menu_model->menu_por_id($id);
+        $this->load->view('menu/menu_editar', $data);
+    }
+
+    public function frm_editar()
+    {
+        $this->form_validation->set_rules('menu_id', 'Identificador', 'required|integer');
+        $this->form_validation->set_rules('nombre', 'Nombre', 'required|min_length[3]');
+        $this->form_validation->set_rules('orden', 'Orden del menú', 'required|integer');
+        if ($this->form_validation->run() == FALSE) {
+            $this->editar($this->input->post('menu_id'));
         } else {
-            $data['menu'] = $this->menu_model->getMenu($id);
-            $data['menus'] = $this->menu_model->getAllMenusDisplay();
-            $data['resources'] = $this->load_resources_options();
-            if (!empty($data['menu'])) {
-                $data['menu']['status'] = (strcmp($data['menu']['status'], 'inactive') == 0) ? FALSE : TRUE;
-                $data['menu']['page_res'] = '';
-                $data['menu']['radio_res'] = FALSE;
-                $data['menu']['radio_url'] = FALSE;
-                if (!empty ($data['menu']['resourceid'])) {
-                    $segment = $this->divide_uri($data['menu']['page_uri'], $data['menu']['resourceid']);
-                    if (!is_null($segment)) {
-                        $data['menu']['page_res'] = $segment;
-                        $data['menu']['radio_res'] = TRUE;
-                        $data['menu']['page_uri'] = '';
-                    } else {
-                        $data['menu']['radio_url'] = TRUE;
-                    }
-                } else {
-                    $data['menu']['radio_url'] = TRUE;
-                }
+            $menu_dto = $this->input->post();
+            $menu_dto['estatus'] = (isset($menu_dto['estatus'])) ? 1 : 0;
+            if (!(bool)$menu_dto['radio_url']) {
+                $this->load->model('resources_model');
+                $menu_dto['page_uri'] = $this->resources_model->recursos_por_id($menu_dto['resource_id'])->resource;
+                $menu_dto['page_uri'] .= '/' . $menu_dto['page_res'];
+                unset($menu_dto['page_res']);
             }
-            if (!count($data['menu'])) {
-                $this->index();
+            unset($menu_dto['radio_url']);
+            if ($this->menu_model->editar($menu_dto)) {
+                set_bootstrap_alert("Se guardó el menú con éxito", BOOTSTRAP_ALERT_SUCCESS);
+            } else {
+                set_bootstrap_alert("Error al guardar el menú, intente nuevamente", BOOTSTRAP_ALERT_SUCCESS);
             }
-            $template['_B'] = 'menu/menu_editar.php';
-            $this->load->template_view($this->template_base, $data, $template);
         }
-
+        redirect('menu/');
     }
 
-    function delete_menu($id = 0)
+    public function borrar($id = 0)
     {
-        $this->cargar_idioma->carga_lang('menu/menu_index');
+        if (!valid_id($id)) {
+            return redirect('menu');
+        }
         $orphans = $this->menu_model->checkMenuOrphans($id);
         if (count($orphans)) {
             if (!$this->menu_model->changeMenuOrphansParent($id)) {
                 $error = $this->menu_model->error_consulta();
-                $mensajes_error = array(trans_line('alerta_borrar_error'), trans_line('alerta_borrar_error_codigo') . base64_encode($error['message']));
+                $mensajes_error = array('Error: ', $error['message']);
                 set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-                return redirect('menu/');
+                return redirect('menu');
             }
         }
-        if ($this->menu_model->deleteMenu($id) != FALSE) {
-            set_bootstrap_alert(trans_line('alerta_borrar_exito'), BOOTSTRAP_ALERT_SUCCESS);
-            return redirect('menu/');
+        if ($this->menu_model->borrar(array('menu_id' => $id)) != FALSE) {
+            set_bootstrap_alert('Se borró el registro con éxito', BOOTSTRAP_ALERT_SUCCESS);
+            return redirect('menu');
         } else {
             if ($this->menu_model->revertChangeMenuOrphansParent($id, $orphans)) {
                 $error = $this->menu_model->error_consulta();
-                $mensajes_error = array(trans_line('alerta_borrar_error'), trans_line('alerta_borrar_error_codigo') . base64_encode($error['message']));
+                $mensajes_error = array('Error: ', $error['message']);
                 set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-                return redirect('menu/');
+                return redirect('menu');
             } else {
                 $error = $this->menu_model->error_consulta();
-                $mensajes_error = array(trans_line('alerta_revert_orphans_error'), trans_line('alerta_borrar_error_codigo') . base64_encode($error['message']));
+                $mensajes_error = array('Error al revertir hijos: ', $error['message']);
                 set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-                return redirect('menu/');
+                return redirect('menu');
             }
         }
     }
 
-    function change_menu_status($id = 0)
+    public function cambiar_estatus($id = 0)
     {
-        $this->cargar_idioma->carga_lang('menu/menu_index');
+        if (!valid_id($id)) {
+            return redirect('menu');
+        }
         $orphans = $this->menu_model->checkMenuOrphans($id);
         if (count($orphans)) {
-            $this->menu_model->changeMenuOrphansStatus($id);
+            if ($this->menu_model->changeMenuOrphansStatus($id) === false) {
+                set_bootstrap_alert('Error al cambiar el estatus, intente nuevamente', BOOTSTRAP_ALERT_DANGER);
+                return redirect('menu');
+            }
         }
-        $this->menu_model->changeMenuStatus($id);
-
-        set_bootstrap_alert(trans_line('alerta_estatus_exito'), BOOTSTRAP_ALERT_SUCCESS);
-        return redirect('menu/');
-
-    }
-
-    function export()
-    {
-        $this->load->helper('download');
-        $csv = $this->menu_model->exportCsv();
-        $name = "Menu_export.csv";
-        force_download($name, $csv);
-
-    }
-
-    function reassign($id = 0)
-    {
-        // This is called when you delete one of menu from deleteMenu() function above.
-        if ($_POST) {
-
-            $this->menu_model->reassignMenus();
-            $this->session->set_flashdata('message', 'Menu deleted and sub-menus reassigned');
-            redirect('menu/');
-        } else {
-            //$id = $this->uri->segment(4);
-
-            $data['menu'] = $this->menu_model->getMenu($id);
-            $data['title'] = "Reassign Sub-menus";
-            $data['menus'] = $this->menu_model->getrootMenus();
-            $this->menu_model->deleteMenu($id);
-
-            // Set breadcrumb
-            ///     $this->bep_site->set_crumb($this->lang->line('userlib_menu_reassign'),'menus/menu/reassign');
-
-            $data['header'] = $this->lang->line('backendpro_access_control');
-            $data['page'] = $this->config->item('backendpro_template_admin') . "admin_submenu_reassign";
-            $data['module'] = 'menus';
-            $this->load->view($this->_container, $data);
+        if ($this->menu_model->changeMenuStatus($id)) {
+            set_bootstrap_alert('Se cambió el estatus con éxito', BOOTSTRAP_ALERT_SUCCESS);
+            return redirect('menu');
         }
-    }
-
-    private function load_resources_options()
-    {
-        $this->load->model('resources_model');
-        $resources = $this->resources_model->get_all();
-        $options = array();
-        foreach ($resources as $res) {
-            $options[$res->ID] = $res->RESOURCE;
-        }
-        return $options;
-    }
-
-    private function resource_name($id = 0)
-    {
-        $this->load->model('resources_model');
-        $resource = $this->resources_model->get_resource($id);
-        if (!empty($resource)) {
-            return $resource->RESOURCE;
-        } else {
-            return '';
-        }
-    }
-
-    public function divide_uri($uri, $resourceid)
-    {
-        $res = $this->resource_name($resourceid);
-        $r = substr($uri, 0, strlen($res));
-        if (strcmp($res, $r) == 0) {
-            $seg = substr($uri, strlen($res) + 1);
-            return (is_null($seg)) ? '' : $seg;
-        } else {
-            return NULL;
-        }
-    }
-
-    public function icons(){
-        $this->cargar_idioma->carga_lang('menu/menu_icons');
-        $template['_B'] = 'menu/menu_icons.php';
-        $this->load->template_view($this->template_base, '', $template);
+        set_bootstrap_alert('Error al cambiar el estatus, intente nuevamente', BOOTSTRAP_ALERT_DANGER);
+        return redirect('menu');
     }
 }
-
-?>

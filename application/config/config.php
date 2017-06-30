@@ -23,7 +23,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/grupotermo/';
+$config['base_url'] = 'http://localhost/proyecto-base-metronico/';
+$config['cdn_assets']='http://localhost/proyecto-base-metronico/assets/';
 
 /*
 |--------------------------------------------------------------------------
@@ -77,14 +78,8 @@ $config['url_suffix'] = '';
 |
 */
 $config['language']	= 'spanish';
-
-/* default language abbreviation */
-$config['language_abbr'] = "es";
-
-/* set available language abbreviations */
-$config['lang_uri_abbr'] = array("es" => "spanish", "en" => "english");
-
-/* hide the language segment (use cookie) */
+$config['language_abbr'] = 'es';
+$config['lang_uri_abbr'] = array('es'=>'spanish','en'=>'english');
 $config['lang_ignore'] = FALSE;
 
 /*
@@ -167,7 +162,7 @@ $config['composer_autoload'] = TRUE;
 | DO NOT CHANGE THIS UNLESS YOU FULLY UNDERSTAND THE REPERCUSSIONS!!
 |
 */
-$config['permitted_uri_chars'] = 'a-z 0-9~%.:_\-';
+$config['permitted_uri_chars'] = 'a-z 0-9~%.:_\-+';
 
 /*
 |--------------------------------------------------------------------------
@@ -176,9 +171,6 @@ $config['permitted_uri_chars'] = 'a-z 0-9~%.:_\-';
 |
 | By default CodeIgniter uses search-engine friendly segment based URLs:
 | example.com/who/what/where/
-|
-| By default CodeIgniter enables access to the $_GET array.  If for some
-| reason you would like to disable it, set 'allow_get_array' to FALSE.
 |
 | You can optionally enable standard query string based URLs:
 | example.com?who=me&what=something&where=here
@@ -194,11 +186,24 @@ $config['permitted_uri_chars'] = 'a-z 0-9~%.:_\-';
 | use segment based URLs.
 |
 */
-$config['allow_get_array'] = TRUE;
 $config['enable_query_strings'] = FALSE;
 $config['controller_trigger'] = 'c';
 $config['function_trigger'] = 'm';
 $config['directory_trigger'] = 'd';
+
+/*
+|--------------------------------------------------------------------------
+| Allow $_GET array
+|--------------------------------------------------------------------------
+|
+| By default CodeIgniter enables access to the $_GET array.  If for some
+| reason you would like to disable it, set 'allow_get_array' to FALSE.
+|
+| WARNING: This feature is DEPRECATED and currently available only
+|          for backwards compatibility purposes!
+|
+*/
+$config['allow_get_array'] = TRUE;
 
 /*
 |--------------------------------------------------------------------------
@@ -222,7 +227,7 @@ $config['directory_trigger'] = 'd';
 | your log files will fill up very fast.
 |
 */
-$config['log_threshold'] = 4;
+$config['log_threshold'] = 2;
 
 /*
 |--------------------------------------------------------------------------
@@ -323,7 +328,7 @@ $config['cache_query_string'] = FALSE;
 | https://codeigniter.com/user_guide/libraries/encryption.html
 |
 */
-$config['encryption_key'] = 'Grupo Termo Llave Priv!';
+$config['encryption_key'] = hex2bin("c219942f0908fdf9ba83e5041fd9a0f4");
 
 /*
 |--------------------------------------------------------------------------
@@ -377,11 +382,11 @@ $config['encryption_key'] = 'Grupo Termo Llave Priv!';
 |
 */
 $config['sess_driver'] = 'files';
-$config['sess_cookie_name'] = 'gt_session';
+$config['sess_cookie_name'] = 'ci_session';
 $config['sess_expiration'] = 7200;
-$config['sess_save_path'] = APPPATH . 'sessions-gruter';
+$config['sess_save_path'] = NULL;
 $config['sess_match_ip'] = FALSE;
-$config['sess_time_to_update'] = 3600;
+$config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;
 
 /*
@@ -399,7 +404,7 @@ $config['sess_regenerate_destroy'] = FALSE;
 |       'cookie_httponly') will also affect sessions.
 |
 */
-$config['cookie_prefix']	= 'gru_ter_';
+$config['cookie_prefix']	= '';
 $config['cookie_domain']	= '';
 $config['cookie_path']		= '/';
 $config['cookie_secure']	= FALSE;
@@ -413,8 +418,8 @@ $config['cookie_httponly'] 	= FALSE;
 | Determines whether to standardize newline characters in input data,
 | meaning to replace \r\n, \r, \n occurrences with the PHP_EOL value.
 |
-| This is particularly useful for portability between UNIX-based OSes,
-| (usually \n) and Windows (\r\n).
+| WARNING: This feature is DEPRECATED and currently available only
+|          for backwards compatibility purposes!
 |
 */
 $config['standardize_newlines'] = FALSE;
@@ -448,9 +453,9 @@ $config['global_xss_filtering'] = FALSE;
 | 'csrf_exclude_uris' = Array of URIs which ignore CSRF checks
 */
 $config['csrf_protection'] = TRUE;
-$config['csrf_token_name'] = 'GRU-TER-TOK';
-$config['csrf_cookie_name'] = 'GRU-TER-COOKIE';
-$config['csrf_expire'] = 7200;
+$config['csrf_token_name'] = 'csrf_ico_tkn';
+$config['csrf_cookie_name'] = 'csrf_cookie_ico';
+$config['csrf_expire'] = 14400;
 $config['csrf_regenerate'] = TRUE;
 $config['csrf_exclude_uris'] = array();
 

@@ -1,101 +1,62 @@
-<?php
-if (!defined('BASEPATH'))
-    exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Groups_model extends CI_Model
 {
-
-    /**
-     * Constructor
-     *
-     * @access public
-     */
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
     }
 
-    function get_all()
-    {
-        $data = array();
-        $query = $this->db->get('groups');
-        if ($query->num_rows() > 0) {
-            $data = $query->result();
-        }
-        return $data;
-    }
-
-    function get_group($id)
-    {
-        $data = new stdClass();
-        $query = $this->db->where('ID', $id)->get('groups');
-        if ($query->num_rows() > 0) {
-            $data = $query->row();
-        }
-        return $data;
-    }
-
-    function get_enables()
-    {
-        $data = array();
-
-        $query = $this->db->where('ENABLE', 1)->get('groups');
-
-        if ($query->num_rows() > 0) {
-            foreach ($query->result() as $row) {
-                $data[] = $row;
-            }
-        }
-
-        return $data;
-    }
-
-    function insert($name, $enable)
-    {
-        $data = array(
-            'NAME' => $name,
-            'ENABLE' => $enable
-        );
-        return $this->db->insert('groups', $data);
-    }
-
-    function delete($id)
-    {
-        $query = $this->db->where('GROUPID', $id)->get('usersgroups');
-        if ($query->num_rows() == 0) {
-            $this->db->delete('accesscontrollist', array('TARGETID' => $id, 'TYPEID' => 1));
-            return $this->db->delete('groups', array('ID' => $id));
-        } else {
-            return FALSE;
-        }
-    }
-
-    function update_all($id, $name, $enable)
-    {
-        $data = array(
-            'NAME' => $name,
-            'ENABLE' => $enable
-        );
-
-        return $this->db->update('groups', $data, array('ID' => $id));
-    }
-
-    function update_custom($id, $data)
-    {
-
-        $this->db->update('groups', $data, array('ID' => $id));
-    }
-
-    function identity()
+    public function ultimo_id()
     {
         return $this->db->insert_id();
     }
 
-    function error_consulta()
+    public function error_consulta()
     {
         return $this->db->error();
     }
+
+    public function grupo_por_id($id = 0)
+    {
+        $obj = null;
+        $q = $this->db->where('groups_id', $id)->get('groups');
+        if ($q->num_rows() > 0) {
+            $obj = $q->row();
+        }
+        return $obj;
+    }
+
+    public function grupos_todos($order_by = 'groups_id')
+    {
+        $res = array();
+        $q = $this->db->order_by($order_by)->get('groups');
+        if ($q->num_rows() > 0) {
+            $res = $q->result();
+        }
+        return $res;
+    }
+
+    public function insertar($grupo = array())
+    {
+        return $this->db->insert('groups', $grupo);
+    }
+
+    public function editar($grupo = array())
+    {
+        return $this->db->update('groups', $grupo, array('groups_id' => $grupo['groups_id']));
+    }
+
+    public function borrar($grupo = array())
+    {
+        return $this->db->delete('groups', $grupo);
+    }
+
+    public function borrar_con_acl($grupo = array())
+    {
+        if ($this->db->delete('groups', $grupo) !== false) {
+            return $this->db->delete('accesscontrollist', array('TARGETID' => $grupo['groups_id'], 'TYPEID' => 1));
+        }
+        return false;
+    }
 }
-
-
-?>

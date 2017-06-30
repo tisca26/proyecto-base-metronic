@@ -1,18 +1,20 @@
-<?php
-if (!defined('BASEPATH'))
-    exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Acl_model extends CI_Model
 {
-
-    /**
-     * Constructor
-     *
-     * @access public
-     */
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
+    }
+
+    public function ultimo_id()
+    {
+        return $this->db->insert_id();
+    }
+
+    public function error_consulta()
+    {
+        return $this->db->error();
     }
 
     /**
@@ -22,17 +24,15 @@ class Acl_model extends CI_Model
      * @param int , group (1) or user (2) type
      * @return Array of rows
      */
-    function get_acl($targetid, $targettype)
+    public function get_acl($targetid = 0, $targettype = 0)
     {
         $data = array();
-
-        $sql = 'SELECT r.ID, r.RESOURCE, acl.*, 0 as R_G, 0 as I_G, 0 as U_G, 0 as D_G FROM resources r left join accesscontrollist acl on acl.RESOURCEID = r.ID and acl.TARGETID = ? and acl.TYPEID = ? ';
-
+        $sql = 'SELECT r.resources_id, r.resource, acl.*, 0 as R_G, 0 as I_G, 0 as U_G, 0 as D_G ' .
+            'FROM resources r ' .
+            'LEFT JOIN accesscontrollist acl ON acl.RESOURCEID = r.resources_id AND acl.TARGETID = ? AND acl.TYPEID = ? ';
         $query = $this->db->query($sql, array($targetid, $targettype));
         if ($query->num_rows() > 0) {
-            foreach ($query->result() as $row) {
-                $data[] = $row;
-            }
+            $data = $query->result();
         }
         return $data;
     }
@@ -43,19 +43,19 @@ class Acl_model extends CI_Model
      * @param int , user ID
      * @return Array of rows
      */
-    function get_acl_group($userid)
+    public function get_acl_group($userid = 0)
     {
         $data = array();
-
-        $sql = 'SELECT acl.RESOURCEID, bit_or(acl.R) as R, bit_or(acl.I) as I, bit_or(acl.U) as U, bit_or(acl.U) as D FROM usersgroups ug inner join accesscontrollist acl on acl.TARGETID = ug.GROUPID and acl.TYPEID=1 WHERE ug.USERID = ? GROUP BY acl.RESOURCEID ORDER BY RESOURCEID';
-
+        $sql = 'SELECT acl.RESOURCEID, bit_or(acl.R) as R, bit_or(acl.I) as I, bit_or(acl.U) as U, bit_or(acl.U) as D ' .
+            'FROM usersgroups ug ' .
+            'INNER JOIN accesscontrollist acl ON acl.TARGETID = ug.groups_id AND acl.TYPEID=1 ' .
+            'WHERE ug.usuarios_id = ? ' .
+            'GROUP BY acl.RESOURCEID ' .
+            'ORDER BY acl.RESOURCEID';
         $query = $this->db->query($sql, array($userid));
         if ($query->num_rows() > 0) {
-            foreach ($query->result() as $row) {
-                $data[] = $row;
-            }
+            $data = $query->result();
         }
-
         return $data;
     }
 
@@ -67,9 +67,8 @@ class Acl_model extends CI_Model
      * @param int , group (1) or user (2) type
      * @param array [RESOURCEID][R,I,U,D], Matrix of permissions
      */
-    function update($targetid, $targettype, $data)
+    public function update($targetid, $targettype, $data)
     {
-
         $this->db->delete('accesscontrollist', array('TARGETID' => $targetid, 'TYPEID' => $targettype));
         foreach ($data as $key => $value) {
             $data = array(
@@ -83,9 +82,5 @@ class Acl_model extends CI_Model
             );
             $this->db->insert('accesscontrollist', $data);
         }
-
     }
 }
-
-
-?>

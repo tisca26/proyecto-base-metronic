@@ -1,112 +1,64 @@
-<?php
-if (!defined('BASEPATH'))
-    exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Resources_model extends CI_Model
 {
-
-    /**
-     * Constructor
-     *
-     * @access public
-     */
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
     }
 
-    /**
-     * Return all item of resources table
-     *
-     * @access public
-     * @return Array of rows
-     */
-    function get_all()
-    {
-        $data = array();
-        $query = $this->db->get('resources');
-
-        if ($query->num_rows() > 0) {
-            $data = $query->result();
-        }
-        return $data;
-    }
-
-    /**
-     * Return one item of resources table
-     *
-     * @access public
-     * @param  int
-     * @return One row of resources table
-     */
-    function get_resource($id)
-    {
-        $data = NULL;
-
-        $query = $this->db->where('ID', $id)->get('resources');
-
-        if ($query->num_rows() > 0) {
-            $data = $query->row();
-        }
-
-        return $data;
-    }
-
-    function insert($name)
-    {
-        $data = array(
-            'RESOURCE' => $name
-        );
-        return $this->db->insert('resources', $data);
-        //return $this->identity();
-
-    }
-
-    /**
-     * Delete an item from resources table
-     *
-     * @access public
-     * @param  int
-     * @return
-     */
-    function delete($id)
-    {
-        $this->db->delete('accesscontrollist', array('RESOURCEID' => $id));
-        $this->db->delete('resources', array('ID' => $id));
-    }
-
-    /**
-     * Update the name of an item in resources table
-     *
-     * @access public
-     * @param  int , string
-     * @return
-     */
-    function update($id, $name)
-    {
-        $data = array(
-            'RESOURCE' => $name
-        );
-        return $this->db->update('resources', $data, array('ID' => $id));
-    }
-
-    /**
-     * Return last id inserted
-     *
-     * @access public
-     * @param
-     * @return int
-     */
-    function identity()
+    public function ultimo_id()
     {
         return $this->db->insert_id();
     }
 
-    function error_consulta()
+    public function error_consulta()
     {
         return $this->db->error();
     }
+
+    public function recursos_todos($order_by = 'resources_id')
+    {
+        $res = array();
+        $q = $this->db->order_by($order_by)->get('resources');
+        if ($q->num_rows() > 0) {
+            $res = $q->result();
+        }
+        return $res;
+    }
+
+    public function recursos_todos_sel($order_by = 'resources_id')
+    {
+        $recs = $this->recursos_todos($order_by);
+        $res = array();
+        foreach ($recs as $rec) {
+            $res[$rec->resources_id] = $rec->resource;
+        }
+        return $res;
+    }
+
+    public function recursos_por_id($id = 0)
+    {
+        $obj = null;
+        $q = $this->db->where('resources_id', $id)->get('resources');
+        if ($q->num_rows() > 0) {
+            $obj = $q->row();
+        }
+        return $obj;
+    }
+
+    public function insertar($data = array())
+    {
+        return $this->db->insert('resources', $data);
+    }
+
+    public function editar($data = array())
+    {
+        return $this->db->update('resources', $data, array('resources_id' => $data['resources_id']));
+    }
+
+    public function borrar($id = 0)
+    {
+        return $this->db->delete('resources', array('resources_id' => $id));
+    }
 }
-
-
-?>

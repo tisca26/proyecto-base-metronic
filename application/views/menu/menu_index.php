@@ -7,48 +7,27 @@ if (!function_exists('generateRowsByLevel')) {
      * @param lang language abreviature to genrate correct links
      * @param int $depth The current depth of the tree to determine classname
      */
-    function generateRowsByLevel($level, &$output, $depth = 0)
+    function generateRowsByLevel($level, &$output, $depth = 0.3)
     {
-        $depthClassMapping = array(0 => 'parent', 1 => 'child', 2 => 'grandchild');
         foreach ($level as $row) {
             $output .= "<tr>";
-            $output .= "<td>" . $row['id'] . "</td>";
-            $output .= "<td style='padding-left: " . $depth * 2.5 . "%;'>" . $row['name'] . "</td>";
+            $output .= "<td class='text-center'>" . $row['menu_id'] . "</td>";
+            $output .= "<td style='padding-left: " . $depth * 2.5  . "%;'>" . $row['nombre'] . "</td>";
             $output .= "<td class='text-center' >";
-            $active = (strcmp($row['status'], 'active') == 0) ? 'check' : 'close';
+            $active = ($row['estatus'] == 1) ? 'check' : 'close';
             $output .= "<i class='fa fa-" . $active . "'> </i>";
             $output .= "</td>";
-            $output .= "<td style='text-align:center' >" . $row['parentid'] . "</td>";
-            $output .= "<td class='text-center'>" . $row['orderr'] . "</td>";
+            $output .= "<td style='text-align:center' >" . $row['parent_id'] . "</td>";
+            $output .= "<td class='text-center'>" . $row['orden'] . "</td>";
             $output .= "<td >" . $row['page_uri'] . "</td>";
             $output .= "<td >" . $row['icon'] . "</td>";
             $output .= '<td class="text-center">';
-            $active = (strcmp($row['status'], 'active') == 0) ? trans_line('desactivar') : trans_line('activar');
-            $output .= anchor_sin_url($active,
-                array(
-                    'class' => 'badge badge-warning badge-roundless activate_confirmation',
-                    'data-toggle' => 'confirmation', 'data-placement' => 'top',
-                    'data-original-title' => trans_line('confirmacion_desactivar_titulo'),
-                    'data-btn-ok-label' => trans_line('confirmacion_desactivar_ok'),
-                    'data-btn-ok-icon' => 'icon-like', 'data-btn-ok-class' => 'btn-success',
-                    'data-btn-cancel-label' => trans_line('confirmacion_desactivar_cancel'),
-                    'data-btn-cancel-icon' => "icon-close", 'data-btn-cancel-class' => 'btn-danger',
-                    'data-id' => $row['id']
-                ));
-            $output .= '|';
-            $output .= anchor('/menu/edit_menu/' . $row['id'], trans_line('editar'), array('class' => 'badge badge-primary badge-roundless'));
-            $output .= '|';
-            $output .= anchor_sin_url(trans_line('borrar'),
-                array(
-                    'class' => 'badge badge-danger badge-roundless delete_confirmation',
-                    'data-toggle' => 'confirmation', 'data-placement' => 'top',
-                    'data-original-title' => trans_line('confirmacion_borrado_titulo'),
-                    'data-btn-ok-label' => trans_line('confirmacion_borrado_ok'),
-                    'data-btn-ok-icon' => 'icon-like', 'data-btn-ok-class' => 'btn-success',
-                    'data-btn-cancel-label' => trans_line('confirmacion_borrado_cancel'),
-                    'data-btn-cancel-icon' => "icon-close", 'data-btn-cancel-class' => 'btn-danger',
-                    'data-id' => $row['id']
-                ));
+            $active = ($row['estatus'] == 1) ? 'Desactivar' : 'Activar';
+            $output .= '<div class="clearfix">';
+            $output .= '<button class="btn btn-sm yellow btn_estatus" data-toggle="confirmation" data-btn-cancel-label="No" data-btn-ok-label="Si" data-original-title="¿Desea cambiar el estatus de este registro?" title="Cambio de estatus" data-id="' . $row['menu_id'] . '"> ' . $active . ' <i class="fa fa-cog"></i></button>';
+            $output .= '<a href="' . base_url('menu/editar/' . $row['menu_id']) . '" class="btn btn-sm blue"> <i class="fa fa-file-o"></i> Editar </a>';
+            $output .= '<button class="btn btn-sm red btn_borrar" data-toggle="confirmation" data-btn-cancel-label="No" data-btn-ok-label="Si" data-original-title="¿Desea borrar este registro?" title="Borrar elemento" data-id="' . $row['menu_id'] . '"> Borrar <i class="fa fa-times"></i></button>';
+            $output .= '</div>';
             $output .= "</td>";
             $output .= "</tr>";
             // if the row has any children, parse those to ensure we have a properly
@@ -60,83 +39,176 @@ if (!function_exists('generateRowsByLevel')) {
     }
 }
 ?>
-<div class="page-content-wrapper">
-    <!-- BEGIN CONTENT BODY -->
-    <!-- BEGIN PAGE HEAD-->
-    <div class="page-head">
-        <div class="container">
-            <!-- BEGIN PAGE TITLE -->
-            <div class="page-title">
-                <h1><?php echo trans_line('titulo_pagina'); ?></h1>
-            </div>
-            <!-- END PAGE TITLE -->
-        </div>
-    </div>
-    <!-- END PAGE HEAD-->
-    <!-- BEGIN PAGE CONTENT BODY -->
-    <div class="page-content">
-        <div class="container">
-            <!-- BEGIN PAGE BREADCRUMBS -->
-            <ul class="page-breadcrumb breadcrumb">
-                <li>
-                    <a href="<?php echo base_url_lang(); ?>"><?php echo trans_line('breadcrumb_home'); ?></a>
-                    <i class="fa fa-circle"></i>
-                </li>
-                <li>
-                    <span><?php echo trans_line('breadcrumb_menu'); ?></span>
-                </li>
-            </ul>
-            <!-- END PAGE BREADCRUMBS -->
-            <!-- BEGIN PAGE CONTENT INNER -->
-            <div class="page-content-inner">
-                <div class="portlet light ">
-                    <div class="portlet-body">
-                        <?php echo validation_errors('<div class="alert alert-danger alert-dismissable">', '</div>'); ?>
-                        <?php echo get_bootstrap_alert(); ?>
-                        <a href="<?php echo base_url_lang() . 'menu/insert_menu' ?>" class="btn btn-success">
-                            <i class="fa fa-plus"></i> <?php echo trans_line('agregar_menu'); ?></a>
-                        <hr>
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                <tr>
-                                    <th> <?php echo trans_line('id'); ?></th>
-                                    <th> <?php echo trans_line('nombre'); ?></th>
-                                    <th class="text-center"> <?php echo trans_line('estatus'); ?></th>
-                                    <th class="text-center"> <?php echo trans_line('id_padre'); ?></th>
-                                    <th class="text-center"> <?php echo trans_line('orden'); ?></th>
-                                    <th> <?php echo trans_line('url'); ?></th>
-                                    <th> <?php echo trans_line('icono'); ?></th>
-                                    <th class="text-center"> <?php echo trans_line('acciones'); ?></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <?php
-                                $output = "";
-                                generateRowsByLevel($navlist, $output);
-                                echo $output;
-                                ?>
-                                </tbody>
-                            </table>
+
+<!DOCTYPE html>
+<!--[if IE 8]>
+<html lang="es" class="ie8 no-js"> <![endif]-->
+<!--[if IE 9]>
+<html lang="es" class="ie9 no-js"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="es">
+<!--<![endif]-->
+<!-- BEGIN HEAD -->
+
+<head>
+    <meta charset="utf-8"/>
+    <title>Bill E Zone</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <meta content="Preview page of Metronic Admin Theme #3 for " name="description"/>
+    <meta content="" name="author"/>
+    <!-- BEGIN PAGE FIRST SCRIPTS -->
+    <script src="<?php echo cdn_assets(); ?>global/plugins/pace/pace.min.js" type="text/javascript"></script>
+    <!-- END PAGE FIRST SCRIPTS -->
+    <!-- BEGIN PAGE TOP STYLES -->
+    <link href="<?php echo cdn_assets(); ?>global/plugins/pace/themes/pace-theme-big-counter.css" rel="stylesheet"
+          type="text/css"/>
+    <!-- END PAGE TOP STYLES -->
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700&subset=all" rel="stylesheet"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/plugins/bootstrap-switch/css/bootstrap-switch.min.css"
+          rel="stylesheet"
+          type="text/css"/>
+    <!-- END GLOBAL MANDATORY STYLES -->
+    <!-- BEGIN THEME GLOBAL STYLES -->
+    <link href="<?php echo cdn_assets(); ?>global/css/components.min.css" rel="stylesheet" id="style_components"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/css/plugins.min.css" rel="stylesheet" type="text/css"/>
+    <!-- END THEME GLOBAL STYLES -->
+    <!-- BEGIN THEME LAYOUT STYLES -->
+    <link href="<?php echo cdn_assets(); ?>layouts/layout3/css/layout.min.css" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>layouts/layout3/css/themes/default.min.css" rel="stylesheet" type="text/css"
+          id="style_color"/>
+    <link href="<?php echo cdn_assets(); ?>layouts/layout3/css/custom.min.css" rel="stylesheet" type="text/css"/>
+    <!-- END THEME LAYOUT STYLES -->
+    <link rel="shortcut icon" href="favicon.ico"/>
+</head>
+<!-- END HEAD -->
+
+<body class="page-container-bg-solid">
+<div class="page-wrapper">
+    <?php echo $this->cargar_elementos_manager->carga_simple('menus/menu_completo'); ?>
+    <div class="page-wrapper-row full-height">
+        <div class="page-wrapper-middle">
+            <div class="page-container">
+                <div class="page-content-wrapper">
+                    <div class="page-head">
+                        <div class="container-fluid">
+                            <div class="page-title">
+                                <h1> Menu </h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-content">
+                        <div class="container">
+                            <ul class="page-breadcrumb breadcrumb">
+                                <li>
+                                    <a href="<?php echo base_url(); ?>">Inicio</a>
+                                    <i class="fa fa-circle"></i>
+                                </li>
+                                <li>
+                                    <span>Menu</span>
+                                </li>
+                            </ul>
+                            <div class="page-content-inner">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="portlet light portlet-fit portlet-datatable ">
+                                            <div class="portlet-title">
+                                                <a type="button" class="btn btn-primary"
+                                                   href="<?php echo base_url('menu/insertar'); ?>"> <i
+                                                            class="fa fa-plus"></i> Agregar </a>
+                                            </div>
+                                            <div class="portlet-body">
+                                                <?php echo get_bootstrap_alert(); ?>
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped table-bordered table-hover">
+                                                        <thead>
+                                                        <tr>
+                                                            <th class="text-center"> Menu ID</th>
+                                                            <th> Nombre</th>
+                                                            <th class="text-center"> Estatus</th>
+                                                            <th class="text-center"> Padre</th>
+                                                            <th class="text-center"> Orden</th>
+                                                            <th> Url</th>
+                                                            <th class="text-center"> Icono</th>
+                                                            <th class="text-center"> Acciones</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        <?php $out = '';
+                                                        generateRowsByLevel($navlist, $out);
+                                                        echo $out; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <a href="javascript:;" class="page-quick-sidebar-toggler">
+                    <i class="icon-login"></i>
+                </a>
+                <div class="page-quick-sidebar-wrapper" data-close-on-body-click="false">
+                    <?php echo $this->cargar_elementos_manager->carga_simple('menus/menu_right'); ?>
+                </div>
             </div>
-            <!-- END PAGE CONTENT INNER -->
         </div>
     </div>
-    <!-- END PAGE CONTENT BODY -->
-    <!-- END CONTENT BODY -->
+    <div class="page-wrapper-row">
+        <?php echo $this->cargar_elementos_manager->carga_simple('footers/footer1'); ?>
+    </div>
 </div>
-<script type="application/javascript">
+
+<!--[if lt IE 9]>
+<script src="<?php echo cdn_assets(); ?>global/plugins/respond.min.js"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/excanvas.min.js"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/ie8.fix.min.js"></script>
+<![endif]-->
+<!-- BEGIN CORE PLUGINS -->
+<script src="<?php echo cdn_assets(); ?>global/plugins/jquery.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/js.cookie.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/jquery-slimscroll/jquery.slimscroll.min.js"
+        type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/jquery.blockui.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/bootstrap-switch/js/bootstrap-switch.min.js"
+        type="text/javascript"></script>
+<!-- END CORE PLUGINS -->
+<script src="<?php echo cdn_assets(); ?>global/plugins/bootstrap-confirmation/bootstrap-confirmation.min.js"
+        type="text/javascript"></script>
+<!-- BEGIN THEME GLOBAL SCRIPTS -->
+<script src="<?php echo cdn_assets(); ?>global/scripts/app.min.js" type="text/javascript"></script>
+<!-- END THEME GLOBAL SCRIPTS -->
+<!-- BEGIN THEME LAYOUT SCRIPTS -->
+<script src="<?php echo cdn_assets(); ?>layouts/layout3/scripts/layout.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>layouts/global/scripts/quick-sidebar.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>layouts/global/scripts/quick-nav.min.js" type="text/javascript"></script>
+<!-- END THEME LAYOUT SCRIPTS -->
+<script>
     $(document).ready(function () {
-        $('.delete_confirmation').on('confirmed.bs.confirmation', function () {
-            var id = $(this).attr('data-id');
-            window.location.href = "<?php echo base_url_lang() . '/menu/delete_menu/' ?>" + id;
+        $('.btn_borrar').on('confirmed.bs.confirmation', function () {
+            $id = $(this).attr('data-id');
+            window.location.replace('<?php echo base_url()?>menu/borrar/' + $id);
         });
-        $('.activate_confirmation').on('confirmed.bs.confirmation', function () {
-            var id = $(this).attr('data-id');
-            window.location.href = "<?php echo base_url_lang() . 'menu/change_menu_status/' ?>" + id;
+
+        $('.btn_estatus').on('confirmed.bs.confirmation', function () {
+            $id = $(this).attr('data-id');
+            window.location.replace('<?php echo base_url()?>menu/cambiar_estatus/' + $id);
         });
-    });// FIN DOCUMENT READY
+    })
 </script>
+</body>
+
+</html>

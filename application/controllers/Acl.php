@@ -1,27 +1,70 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-include("Acl_controller.php");
-
-class Acl extends Acl_controller
+include "Privy.php";
+class Acl extends Privy
 {
-
-    private $template_base = 'index';
-
-    /**
-     * Constructor
-     *
-     * @access public
-     */
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
-
-        $this->set_read_list(array('form_acl'));
+        $this->set_read_list(array('frm_acl'));
         $this->set_update_list(array('edit_acl'));
-
         $this->check_access();
-
         $this->load->model('acl_model');
+    }
+
+    /**
+     * Load edit resource form
+     *
+     * @access public
+     * @param int , group or user ID
+     * @param int , group (1) or user (2) type
+     * @return
+     */
+    public function frm_acl($targetid = 0, $targettype = 0)
+    {
+        $target = array();
+        if ($targettype == 1) {
+            $this->load->model('groups_model');
+            $target = $this->groups_model->grupo_por_id($targetid);
+        } elseif ($targettype == 2) {
+            $this->load->model('users_model');
+            $target = $this->users_model->usuario_por_id($targetid);
+        }
+        if (is_object($target)) {
+            $data['targetid'] = $targetid;
+            $data['targettype'] = $targettype;
+            $data['rows'] = $this->acl_model->get_acl($targetid, $targettype);
+            if ($targettype == 2) {
+                $data['title'] = "Usuario: " . $target->username;
+                $groupacl = $this->acl_model->get_acl_group($targetid);
+                $data['groupacl'] = $groupacl;
+                foreach ($data['rows'] as $row) {
+                    foreach ($groupacl as $res) {
+                        if ($row->resources_id == $res->RESOURCEID) {
+                            if ($row->R == 0 and $res->R == 1) {
+                                $row->R = 1;
+                                $row->R_G = 1;
+                            }
+                            if ($row->I == 0 and $res->I == 1) {
+                                $row->I = 1;
+                                $row->I_G = 1;
+                            }
+                            if ($row->U == 0 and $res->U == 1) {
+                                $row->U = 1;
+                                $row->U_G = 1;
+                            }
+                            if ($row->D == 0 and $res->D == 1) {
+                                $row->D = 1;
+                                $row->D_G = 1;
+                            }
+                        }
+                    }
+                }
+            } else {
+                $data['title'] = "Grupo: " . $target->nombre;
+            }
+            $this->load->view('acl/acl_index', $data);
+        }
     }
 
     /**
@@ -30,9 +73,8 @@ class Acl extends Acl_controller
      * @access public
      * @return
      */
-    function edit_acl()
+    public function edit_acl()
     {
-        $this->cargar_idioma->carga_lang('acl/acl_index');
         $acldata = array();
         $template = array('R' => 0, 'I' => 0, 'U' => 0, 'D' => 0);
 
@@ -79,70 +121,9 @@ class Acl extends Acl_controller
 
         $this->acl_model->update($targetid, $targettype, $acldata);
 
-        set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
+        set_bootstrap_alert('Se actualizaron los permisos con éxito', BOOTSTRAP_ALERT_SUCCESS);
         //Regresa al mismo lugar porque lo usan diferentes modulos (grupos y permisos de usuarios)
-        redirect('acl/form_acl/' . $targetid . '/' . $targettype);
-        //redirect('groups/');
+        redirect('acl/frm_acl/' . $targetid . '/' . $targettype);
     }
 
-    /**
-     * Load edit resource form
-     *
-     * @access public
-     * @param int , group or user ID
-     * @param int , group (1) or user (2) type
-     * @return
-     */
-    function form_acl($targetid = 0, $targettype = 0)
-    {
-        $this->cargar_idioma->carga_lang('acl/acl_index');
-        $target = array();
-        if ($targettype == 1) {
-            $this->load->model('groups_model');
-            $target = $this->groups_model->get_group($targetid);
-        } elseif ($targettype == 2) {
-            $this->load->model('users_model');
-            $target = $this->users_model->get_user($targetid);
-        }
-        if (count($target) > 0) {
-            $data['targetid'] = $targetid;
-            $data['targettype'] = $targettype;
-            $data['rows'] = $this->acl_model->get_acl($targetid, $targettype);
-            if ($targettype == 2) {
-                $data['title'] = "(" . 'Usuario' . ": " . $target->NOMBRE . ")";
-                $groupacl = $this->acl_model->get_acl_group($targetid);
-                $data['groupacl'] = $groupacl;
-                foreach ($data['rows'] as $row) {
-                    foreach ($groupacl as $res) {
-                        if ($row->ID == $res->RESOURCEID) {
-                            if ($row->R == 0 and $res->R == 1) {
-                                $row->R = 1;
-                                $row->R_G = 1;
-                            }
-                            if ($row->I == 0 and $res->I == 1) {
-                                $row->I = 1;
-                                $row->I_G = 1;
-                            }
-                            if ($row->U == 0 and $res->U == 1) {
-                                $row->U = 1;
-                                $row->U_G = 1;
-                            }
-                            if ($row->D == 0 and $res->D == 1) {
-                                $row->D = 1;
-                                $row->D_G = 1;
-                            }
-                        }
-                    }
-                }
-
-            } else {
-                $data['title'] = "(" . 'Grupo' . ": " . $target->NAME . ")";
-            }
-            $template['_B'] = 'acl/acl_index.php';
-            $this->load->template_view($this->template_base, $data, $template);
-        }
-    }
 }
-
-
-?>

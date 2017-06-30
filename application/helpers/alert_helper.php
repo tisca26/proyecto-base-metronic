@@ -1,4 +1,4 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
 if (!function_exists('set_bootstrap_alert')) {
     function set_bootstrap_alert($text_input, $type = BOOTSTRAP_ALERT_SUCCESS)

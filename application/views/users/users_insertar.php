@@ -1,282 +1,379 @@
-<div class="page-content-wrapper">
-    <!-- BEGIN CONTENT BODY -->
-    <!-- BEGIN PAGE HEAD-->
-    <div class="page-head">
-        <div class="container">
-            <!-- BEGIN PAGE TITLE -->
-            <div class="page-title">
-                <h1><?php echo trans_line('titulo_pagina'); ?></h1>
-            </div>
-            <!-- END PAGE TITLE -->
-        </div>
-    </div>
-    <!-- END PAGE HEAD-->
-    <!-- BEGIN PAGE CONTENT BODY -->
-    <div class="page-content">
-        <div class="container">
-            <!-- BEGIN PAGE BREADCRUMBS -->
-            <ul class="page-breadcrumb breadcrumb">
-                <li>
-                    <a href="<?php echo base_url_lang(); ?>"><?php echo trans_line('breadcrumb_home'); ?></a>
-                    <i class="fa fa-circle"></i>
-                </li>
-                <li>
-                    <a href="<?php echo base_url_lang() . 'users'; ?>"><?php echo trans_line('breadcrumb_users'); ?></a>
-                    <i class="fa fa-circle"></i>
-                </li>
-                <li>
-                    <span><?php echo trans_line('breadcrumb_users_agregar'); ?></span>
-                </li>
-            </ul>
-            <!-- END PAGE BREADCRUMBS -->
-            <!-- BEGIN PAGE CONTENT INNER -->
-            <div class="page-content-inner">
-                <?php echo get_bootstrap_alert(); ?>
-                <div class="portlet light ">
-                    <div class="portlet-title">
-                        <div class="caption">
-                            <span><?php echo trans_line('titulo_forma'); ?></span>
+<!DOCTYPE html>
+<!--[if IE 8]>
+<html lang="es" class="ie8 no-js"> <![endif]-->
+<!--[if IE 9]>
+<html lang="es" class="ie9 no-js"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="es">
+<!--<![endif]-->
+<!-- BEGIN HEAD -->
+
+<head>
+    <meta charset="utf-8"/>
+    <title>Bill E Zone</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <meta content="Preview page of Metronic Admin Theme #3 for " name="description"/>
+    <meta content="" name="author"/>
+    <!-- BEGIN PAGE FIRST SCRIPTS -->
+    <script src="<?php echo cdn_assets(); ?>global/plugins/pace/pace.min.js" type="text/javascript"></script>
+    <!-- END PAGE FIRST SCRIPTS -->
+    <!-- BEGIN PAGE TOP STYLES -->
+    <link href="<?php echo cdn_assets(); ?>global/plugins/pace/themes/pace-theme-big-counter.css" rel="stylesheet"
+          type="text/css"/>
+    <!-- END PAGE TOP STYLES -->
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700&subset=all" rel="stylesheet"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/plugins/bootstrap-switch/css/bootstrap-switch.min.css"
+          rel="stylesheet"
+          type="text/css"/>
+    <!-- END GLOBAL MANDATORY STYLES -->
+    <!-- BEGIN THEME GLOBAL STYLES -->
+    <link href="<?php echo cdn_assets(); ?>global/css/components.min.css" rel="stylesheet" id="style_components"
+          type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>global/css/plugins.min.css" rel="stylesheet" type="text/css"/>
+    <!-- END THEME GLOBAL STYLES -->
+    <!-- BEGIN THEME LAYOUT STYLES -->
+    <link href="<?php echo cdn_assets(); ?>layouts/layout3/css/layout.min.css" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo cdn_assets(); ?>layouts/layout3/css/themes/default.min.css" rel="stylesheet" type="text/css"
+          id="style_color"/>
+    <link href="<?php echo cdn_assets(); ?>layouts/layout3/css/custom.min.css" rel="stylesheet" type="text/css"/>
+    <!-- END THEME LAYOUT STYLES -->
+    <link rel="shortcut icon" href="favicon.ico"/>
+</head>
+<!-- END HEAD -->
+
+<body class="page-container-bg-solid">
+<div class="page-wrapper">
+    <?php echo $this->cargar_elementos_manager->carga_simple('menus/menu_completo'); ?>
+    <div class="page-wrapper-row full-height">
+        <div class="page-wrapper-middle">
+            <!-- ----------------------------------------------------- BEGIN CONTAINER ----------------------------------------------------- -->
+            <div class="page-container">
+                <div class="page-content-wrapper">
+                    <div class="page-head">
+                        <div class="container-fluid">
+                            <div class="page-title">
+                                <h1>Usuarios</h1>
+                            </div>
                         </div>
                     </div>
-                    <div class="portlet-body">
-                        <?php echo validation_errors('<div class="alert alert-danger alert-dismissable">', '</div>'); ?>
-                        <?php echo form_open('users/insert_user', array('id' => 'current_form')); ?>
-                        <div class="form-body">
-                            <div class="alert alert-danger display-hide">
-                                <button class="close" data-close="alert"></button>
-                                <?php echo trans_line('jquery_invalid'); ?>
-                            </div>
-                            <div class="alert alert-success display-hide">
-                                <button class="close" data-close="alert"></button>
-                                <?php echo trans_line('jquery_valid'); ?>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group form-md-line-input">
-                                        <?php echo form_input('nick', set_value('nick'), 'id="nick" placeholder="' . trans_line('username_placeholder_usuario') . '" class="form-control"'); ?>
-                                        <label for="nick"><?php echo trans_line('username_usuario'); ?>
-                                            <span class="required">*</span>
-                                        </label>
-                                        <span
-                                            class="help-block"><?php echo trans_line('username_usuario_ayuda'); ?></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group form-md-checkboxes">
-                                        <label for=""><?php echo trans_line('estatus'); ?></label>
-                                        <div class="md-checkbox-list">
-                                            <div class="md-checkbox">
-                                                <input type="checkbox" id="enableuser" name="enableuser" value="1"
-                                                       class="md-check" <?php echo set_checkbox('enableuser', '1'); ?>>
-                                                <label for="enableuser">
-                                                    <span></span>
-                                                    <span class="check"></span>
-                                                    <span
-                                                        class="box"></span> <?php echo trans_line('estatus_activo'); ?>
-                                                </label>
+                    <div class="page-content">
+                        <div class="container">
+                            <ul class="page-breadcrumb breadcrumb">
+                                <li>
+                                    <a href="<?php echo base_url(); ?>">Inicio</a>
+                                    <i class="fa fa-circle"></i>
+                                </li>
+                                <li>
+                                    <a href="<?php echo base_url('users'); ?>">Usuarios</a>
+                                    <i class="fa fa-circle"></i>
+                                </li>
+                                <li>
+                                    <span>Agregar Usuarios</span>
+                                </li>
+                            </ul>
+                            <!-- --------------------------- INICIO CONTENIDO --------------------------- -->
+                            <div class="page-content-inner">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="portlet light portlet-fit portlet-form ">
+                                            <div class="portlet-title">
+                                                <div class="caption">
+                                                    <i class="icon-settings font-dark"></i>
+                                                    <span class="caption-subject font-dark sbold uppercase">Alta de Usuario</span>
+                                                </div>
+                                            </div>
+                                            <div class="portlet-body">
+                                                <?php echo get_bootstrap_alert(); ?>
+                                                <?php echo validation_errors("<div class='alert alert-danger'>", "</div>"); ?>
+                                                <?php echo form_open('users/frm_insertar', array('class' => 'horizontal-form', 'id' => 'form1')); ?>
+                                                <div class="form-body">
+                                                    <div class="alert alert-danger display-hide">
+                                                        <button class="close" data-close="alert"></button>
+                                                        Tiene errores en su formulario
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="control-label">Nombre(s)
+                                                                    <span class="required"> * </span></label>
+                                                                <?php $data_nombre = [
+                                                                    'id' => 'nombre',
+                                                                    'placeholder' => 'Nombre(s) del usuario',
+                                                                    'class' => 'form-control',
+                                                                    'data-rule-required' => 'true',
+                                                                    'data-msg-required' => 'Este campo es requerido',
+                                                                    'data-rule-minlength' => '3',
+                                                                    'data-msg-minlength' => 'Mínimo debe tener {0} caracteres'
+                                                                ]; ?>
+                                                                <?php echo form_input('nombre', set_value('nombre'), $data_nombre); ?>
+                                                                <span class="help-block">Nombre(s) del usuario</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="control-label">Apellido Paterno
+                                                                    <span class="required"> * </span></label>
+                                                                <?php $data_apellido_paterno = [
+                                                                    'id' => 'apellido_paterno',
+                                                                    'placeholder' => 'Apellido paterno',
+                                                                    'class' => 'form-control',
+                                                                    'data-rule-required' => 'true',
+                                                                    'data-msg-required' => 'Este campo es requerido',
+                                                                    'data-rule-minlength' => '3',
+                                                                    'data-msg-minlength' => 'Mínimo debe tener {0} caracteres'
+                                                                ]; ?>
+                                                                <?php echo form_input('apellido_paterno', set_value('apellido_paterno'), $data_apellido_paterno); ?>
+                                                                <span class="help-block">Apellido paterno </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="control-label">Apellido Materno
+                                                                    <span class="required"> * </span></label>
+                                                                <?php $data_apellido_materno = [
+                                                                    'id' => 'apellido_materno',
+                                                                    'placeholder' => 'Apellido materno',
+                                                                    'class' => 'form-control',
+                                                                    'data-rule-required' => 'true',
+                                                                    'data-msg-required' => 'Este campo es requerido',
+                                                                    'data-rule-minlength' => '3',
+                                                                    'data-msg-minlength' => 'Mínimo debe tener {0} caracteres'
+                                                                ]; ?>
+                                                                <?php echo form_input('apellido_materno', set_value('apellido_materno'), $data_apellido_materno); ?>
+                                                                <span class="help-block">Apellido materno</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="control-label"> Username
+                                                                    <span class="required"> * </span></label>
+                                                                <?php $data_username = [
+                                                                    'id' => 'username',
+                                                                    'placeholder' => 'Username',
+                                                                    'class' => 'form-control',
+                                                                    'data-rule-required' => 'true',
+                                                                    'data-msg-required' => 'Este campo es requerido',
+                                                                    'data-rule-minlength' => '3',
+                                                                    'data-msg-minlength' => 'Mínimo debe tener {0} caracteres'
+                                                                ]; ?>
+                                                                <?php echo form_input('username', set_value('username'), $data_username); ?>
+                                                                <span class="help-block"> Username </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="control-label">Email
+                                                                    <span class="required"> * </span></label>
+                                                                <?php $data_email = [
+                                                                    'id' => 'email',
+                                                                    'placeholder' => 'Correo electrónico',
+                                                                    'class' => 'form-control',
+                                                                    'data-rule-required' => 'true',
+                                                                    'data-msg-required' => 'Este campo es requerido',
+                                                                    'data-rule-minlength' => '3',
+                                                                    'data-msg-minlength' => 'Mínimo debe tener {0} caracteres',
+                                                                    'data-rule-email' => 'true',
+                                                                    'data-msg-email' => 'El campo debe ser un email válido'
+                                                                ]; ?>
+                                                                <?php echo form_input('email', set_value('email'), $data_email); ?>
+                                                                <span class="help-block"> Correo electrónico </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="control-label"> Contraseña
+                                                                    <span class="required"> * </span></label>
+                                                                <?php $data_contrasena = [
+                                                                    'id' => 'passwd',
+                                                                    'placeholder' => 'Contraseña',
+                                                                    'class' => 'form-control',
+                                                                    'data-rule-required' => 'true',
+                                                                    'data-msg-required' => 'Este campo es requerido'
+                                                                ]; ?>
+                                                                <?php echo form_input('passwd', set_value('passwd'), $data_contrasena); ?>
+                                                                <span class="help-block"> Contraseña </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="control-label"> Re - Contraseña
+                                                                    <span class="required"> * </span></label>
+                                                                <?php $data_contrasena = [
+                                                                    'id' => 'repasswd',
+                                                                    'placeholder' => 'Vuelva a escribir la contraseña',
+                                                                    'class' => 'form-control',
+                                                                    'data-rule-equalTo' => '#passwd',
+                                                                    'data-msg-equalTo' => 'Las contraseñas deben coincidir'
+                                                                ]; ?>
+                                                                <?php echo form_input('repasswd', set_value('repasswd'), $data_contrasena); ?>
+                                                                <span class="help-block"> Volver a escribir la contraseña </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label> Estatus </label>
+                                                                <div class="mt-checkbox-list">
+                                                                    <label class="mt-checkbox mt-checkbox-outline">
+                                                                        ¿Activo?
+                                                                        <?php echo form_checkbox('estatus', '1', true); ?>
+                                                                        <span></span>
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label> Grupo <span class="required"> * </span></label>
+                                                                <div class="mt-checkbox-list"
+                                                                     data-error-container="#frm1_grupos_error">
+                                                                    <?php foreach ($grupos as $grupo): ?>
+                                                                        <label class="mt-checkbox mt-checkbox-outline">
+                                                                            <?php echo $grupo->nombre; ?>
+                                                                            <input type="checkbox" name="groups[]"
+                                                                                   value="<?php echo $grupo->groups_id; ?>" <?php echo set_checkbox('groups[]', $grupo->groups_id); ?>
+                                                                                   data-rule-required="true" data-msg-required = "Este campo es requerido"/>
+                                                                            <span></span>
+                                                                        </label>
+                                                                    <?php endforeach; ?>
+                                                                </div>
+                                                                <div id="frm1_grupos_error"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-actions right">
+                                                    <a type="button" class="btn default"
+                                                       href="<?php echo base_url('users'); ?>">Cancelar</a>
+                                                    <button type="submit" class="btn blue">
+                                                        <i class="fa fa-check"></i> Guardar
+                                                    </button>
+                                                </div>
+                                                <?php echo form_close(); ?>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group form-md-line-input">
-                                        <?php echo form_input('nombre', set_value('nombre'), 'id="nombre" placeholder="' . trans_line('nombre_placeholder') . '" class="form-control"'); ?>
-                                        <label for="nombre"><?php echo trans_line('nombre'); ?>
-                                            <span class="required">*</span>
-                                        </label>
-                                        <span class="help-block"><?php echo trans_line('nombre_ayuda'); ?></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group form-md-line-input">
-                                        <?php echo form_input('apellidos', set_value('apellidos'), 'id="apellidos" placeholder="' . trans_line('apellidos_placeholder') . '" class="form-control"'); ?>
-                                        <label for="apellidos"><?php echo trans_line('apellidos'); ?>
-                                            <span class="required">*</span>
-                                        </label>
-                                        <span class="help-block"><?php echo trans_line('apellidos_ayuda'); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group form-md-line-input">
-                                        <?php echo form_input('password', set_value('password'), 'id="password" placeholder="' . trans_line('contrasena_placeholder') . '" class="form-control"'); ?>
-                                        <label for="password"><?php echo trans_line('contrasena'); ?>
-                                            <span class="required">*</span>
-                                        </label>
-                                        <span class="help-block"><?php echo trans_line('contrasena_ayuda'); ?></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group form-md-line-input">
-                                        <?php echo form_input('repassword', set_value('repassword'), 'id="repassword" placeholder="' . trans_line('recontrasena_placeholder') . '" class="form-control"'); ?>
-                                        <label for="repassword"><?php echo trans_line('recontrasena'); ?>
-                                            <span class="required">*</span>
-                                        </label>
-                                        <span class="help-block"><?php echo trans_line('recontrasena_ayuda'); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group form-md-line-input">
-                                        <?php echo form_input('correo', set_value('correo'), 'id="correo" placeholder="' . trans_line('email_placeholder') . '" class="form-control"'); ?>
-                                        <label for="correo"><?php echo trans_line('email'); ?>
-                                            <span class="required">*</span>
-                                        </label>
-                                        <span class="help-block"><?php echo trans_line('email_ayuda'); ?></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group form-md-radios">
-                                        <label for="form_control_1"><?php echo trans_line('grupo'); ?></label>
-                                        <div class="md-radio-list">
-                                            <?php foreach ($groups as $gr): ?>
-                                                <div class="md-radio">
-                                                    <input type="radio" id="radio_group_<?php echo $gr->ID; ?>"
-                                                           name="radio_group" value="<?php echo $gr->ID; ?>"
-                                                           class="md-radiobtn" <?php echo set_radio('radio_group', $gr->ID); ?>>
-                                                    <label for="radio_group_<?php echo $gr->ID ?>">
-                                                        <span></span>
-                                                        <span class="check"></span>
-                                                        <span class="box"></span> <?php echo $gr->NAME; ?> </label>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- --------------------------- FIN CONTENIDO --------------------------- -->
                         </div>
-                        <div class="form-actions">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button type="submit" class="btn green">Guardar</button>
-                                    <a class="btn default" href="<?php echo base_url_lang() . 'users' ?>">Regresar</a>
-                                </div>
-                            </div>
-                        </div>
-                        <?php echo form_close(); ?>
                     </div>
                 </div>
+                <a href="javascript:;" class="page-quick-sidebar-toggler">
+                    <i class="icon-login"></i>
+                </a>
+                <div class="page-quick-sidebar-wrapper" data-close-on-body-click="false">
+                    <?php echo $this->cargar_elementos_manager->carga_simple('menus/menu_right'); ?>
+                </div>
+                <!-- END QUICK SIDEBAR -->
             </div>
-            <!-- END PAGE CONTENT INNER -->
+            <!-- -----------------------------------------------------END CONTAINER ----------------------------------------------------- -->
         </div>
     </div>
-    <!-- END PAGE CONTENT BODY -->
-    <!-- END CONTENT BODY -->
+    <div class="page-wrapper-row">
+        <?php echo $this->cargar_elementos_manager->carga_simple('footers/footer1'); ?>
+    </div>
 </div>
-<script type="application/javascript">
+
+<!--[if lt IE 9]>
+<script src="<?php echo cdn_assets(); ?>global/plugins/respond.min.js"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/excanvas.min.js"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/ie8.fix.min.js"></script>
+<![endif]-->
+<!-- BEGIN CORE PLUGINS -->
+<script src="<?php echo cdn_assets(); ?>global/plugins/jquery.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/js.cookie.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/jquery-slimscroll/jquery.slimscroll.min.js"
+        type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/jquery.blockui.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/bootstrap-switch/js/bootstrap-switch.min.js"
+        type="text/javascript"></script>
+<!-- END CORE PLUGINS -->
+<!--  PAGE LEVEL -->
+<script src="<?php echo cdn_assets(); ?>global/plugins/jquery-validation/js/jquery.validate.min.js"
+        type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>global/plugins/jquery-validation/js/additional-methods.min.js"
+        type="text/javascript"></script>
+<!-- END PAGE LEVEL -->
+<!-- BEGIN THEME GLOBAL SCRIPTS -->
+<script src="<?php echo cdn_assets(); ?>global/scripts/app.min.js" type="text/javascript"></script>
+<!-- END THEME GLOBAL SCRIPTS -->
+<!-- BEGIN THEME LAYOUT SCRIPTS -->
+<script src="<?php echo cdn_assets(); ?>layouts/layout3/scripts/layout.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>layouts/global/scripts/quick-sidebar.min.js" type="text/javascript"></script>
+<script src="<?php echo cdn_assets(); ?>layouts/global/scripts/quick-nav.min.js" type="text/javascript"></script>
+<!-- END THEME LAYOUT SCRIPTS -->
+<script>
     $(document).ready(function () {
+        $('#clickmewow').click(function () {
+            $('#radio1003').attr('checked', 'checked');
+        });
 
-        var form1 = $('#current_form');
+        var form1 = $('#form1');
         var error1 = $('.alert-danger', form1);
-        var success1 = $('.alert-success', form1);
-
         form1.validate({
             errorElement: 'span', //default input error message container
             errorClass: 'help-block help-block-error', // default input error message class
             focusInvalid: false, // do not focus the last invalid input
             ignore: "", // validate all fields including form hidden input
-            messages: {
-                nick: {
-                    required: "<?php echo trans_line('required'); ?>",
-                    minlength: jQuery.validator.format("<?php echo trans_line('minlength'); ?>")
-                },
-                nombre: {
-                    minlength: jQuery.validator.format("<?php echo trans_line('minlength'); ?>"),
-                    required: "<?php echo trans_line('required'); ?>"
-                },
-                apellidos: {
-                    minlength: jQuery.validator.format("<?php echo trans_line('minlength'); ?>"),
-                    required: "<?php echo trans_line('required'); ?>"
-                },
-                password: {
-                    minlength: jQuery.validator.format("<?php echo trans_line('minlength'); ?>"),
-                    required: "<?php echo trans_line('required'); ?>"
-                },
-                repassword: {
-                    required: "<?php echo trans_line('required'); ?>",
-                    equalTo: "<?php echo trans_line('equal_to_pass'); ?>"
-                },
-                correo: {
-                    minlength: jQuery.validator.format("<?php echo trans_line('minlength'); ?>"),
-                    required: "<?php echo trans_line('required'); ?>",
-                    email: "<?php echo trans_line('correo'); ?>"
-                },
-                radio_group: {
-                    required: "<?php echo trans_line('required'); ?>"
-                }
-            },
-            rules: {
-                nick: {
-                    minlength: 3,
-                    required: true
-                },
-                nombre: {
-                    minlength: 3,
-                    required: true
-                },
-                apellidos: {
-                    minlength: 3,
-                    required: true
-                },
-                password: {
-                    minlength: 2,
-                    required: true
-                },
-                repassword: {
-                    required: true,
-                    equalTo: "#password"
-                },
-                correo: {
-                    minlength: 3,
-                    required: true,
-                    email: true
-                },
-                radio_group: {
-                    required: true
-                }
-            },
-
-            invalidHandler: function (event, validator) { //display error alert on form submit
-                success1.hide();
-                error1.show();
-                App.scrollTo(error1, -200);
-            },
-
-            errorPlacement: function (error, element) {
-                if (element.is(':checkbox')) {
-                    error.insertAfter(element.closest(".md-checkbox-list, .md-checkbox-inline, .checkbox-list, .checkbox-inline"));
-                } else if (element.is(':radio')) {
-                    error.insertAfter(element.closest(".md-radio-list, .md-radio-inline, .radio-list,.radio-inline"));
+            errorPlacement: function (error, element) { // render error placement for each input typeW
+                if (element.parents('.mt-radio-list').size() > 0 || element.parents('.mt-checkbox-list').size() > 0) {
+                    if (element.parents('.mt-radio-list').size() > 0) {
+                        error.appendTo(element.parents('.mt-radio-list')[0]);
+                    }
+                    if (element.parents('.mt-checkbox-list').size() > 0) {
+                        error.appendTo(element.parents('.mt-checkbox-list')[0]);
+                    }
+                } else if (element.parents('.mt-radio-inline').size() > 0 || element.parents('.mt-checkbox-inline').size() > 0) {
+                    if (element.parents('.mt-radio-inline').size() > 0) {
+                        error.appendTo(element.parents('.mt-radio-inline')[0]);
+                    }
+                    if (element.parents('.mt-checkbox-inline').size() > 0) {
+                        error.appendTo(element.parents('.mt-checkbox-inline')[0]);
+                    }
+                } else if (element.parent(".input-group").size() > 0) {
+                    error.insertAfter(element.parent(".input-group"));
+                } else if (element.attr("data-error-container")) {
+                    error.appendTo(element.attr("data-error-container"));
                 } else {
                     error.insertAfter(element); // for other inputs, just perform default behavior
                 }
             },
-
+            invalidHandler: function (event, validator) { //display error alert on form submit
+                error1.show();
+                App.scrollTo(error1, -200);
+            },
             highlight: function (element) { // hightlight error inputs
-                $(element)
-                    .closest('.form-group').addClass('has-error'); // set error class to the control group
+                $(element).closest('.form-group').addClass('has-error'); // set error class to the control group
             },
-
             unhighlight: function (element) { // revert the change done by hightlight
-                $(element)
-                    .closest('.form-group').removeClass('has-error'); // set error class to the control group
+                $(element).closest('.form-group').removeClass('has-error'); // set error class to the control group
             },
-
             success: function (label) {
-                label
-                    .closest('.form-group').removeClass('has-error'); // set success class to the control group
+                label.closest('.form-group').removeClass('has-error'); // set success class to the control group
             },
-
             submitHandler: function (form) {
-                success1.show();
                 error1.hide();
-                form.submit();
+                form[0].submit(); // submit the form
             }
         });
-
-    });// FIN DOCUMENT READY
+    })
 </script>
+</body>
+
+</html>

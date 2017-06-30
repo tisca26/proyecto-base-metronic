@@ -1,109 +1,109 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-include("Acl_controller.php");
+include "Privy.php";
 
-class Groups extends Acl_controller
+class Groups extends Privy
 {
-
-    private $template_base = 'index';
-
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
-
         $this->set_read_list(array('index'));
-        $this->set_insert_list(array('insert_group', 'form_insert'));
-        $this->set_update_list(array('edit_group', 'form_edit'));
-        $this->set_delete_list(array('delete_group'));
-
+        $this->set_insert_list(array('insertar', 'frm_insertar'));
+        $this->set_update_list(array('editar', 'frm_editar'));
+        $this->set_delete_list(array('borrar', 'borrado_final'));
         $this->check_access();
-
-        $this->load->model('groups_model');
-        $this->load->library('form_validation');
+        $this->load->library('business/Group');
     }
 
-    function index()
+    public function index()
     {
-        $this->cargar_idioma->carga_lang('groups/groups_index');
-        $data['rows'] = $this->groups_model->get_all();
-        $template['_B'] = 'groups/groups_index.php';
-        $this->load->template_view($this->template_base, $data, $template);
-
+        $data['grupos'] = $this->group->grupos_todos();
+        $this->load->view('groups/groups_index', $data);
     }
 
-    function insert_group()
+    public function insertar()
     {
-        $this->cargar_idioma->carga_lang('groups/groups_insertar');
-        $this->form_validation->set_rules('groupname', trans_line('groupname'), 'required|trim|min_length[3]');
+        $this->load->view('groups/groups_insertar');
+    }
+
+    public function frm_insertar()
+    {
+        $this->form_validation->set_rules('nombre', 'Nombre', 'required|min_length[3]');
         if ($this->form_validation->run() == FALSE) {
-            $this->form_insert();
+            $this->insertar();
         } else {
-            $name = $this->input->post('groupname');
-            $enable = ((bool)$this->input->post('enablegroup') == FALSE) ? FALSE : TRUE;
-            if ($this->groups_model->insert($name, $enable) == TRUE) {
-                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
-                return redirect('groups/form_insert');
+            $grupo = $this->input->post();
+            $grupo['estatus'] = isset($grupo['estatus']) ? 1 : 0;
+            if ($this->group->insertar($grupo)) {
+                $msg = "El grupo se guardó con éxito, inserte otro o <strong><a href='" . base_url('groups') . "'>vuela al inicio</a></strong>";
+                set_bootstrap_alert($msg, BOOTSTRAP_ALERT_SUCCESS);
             } else {
-                $error = $this->groups_model->error_consulta();
-                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
-                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-                return $this->form_insert();
+                $msg = "Error al guardar el grupo, intente nuevamente";
+                set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
             }
+            redirect('groups/insertar');
         }
     }
 
-    function edit_group()
+    public function editar($id = 0)
     {
-        $this->cargar_idioma->carga_lang('groups/groups_editar');
-        $this->form_validation->set_rules('groupname', trans_line('groupname'), 'required|trim|min_length[3]');
-        $id = $this->input->post('groupid');
+        if (!valid_id($id)) {
+            $msg = 'Error en el identificador';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
+            redirect('groups');
+        }
+        $data['grupo'] = $this->group->grupo_por_id($id);
+        $this->load->view('groups/groups_editar', $data);
+    }
+
+    public function frm_editar()
+    {
+        $this->form_validation->set_rules('groups_id', 'Identificador', 'required|integer');
+        $this->form_validation->set_rules('nombre', 'Nombre', 'required|min_length[3]');
         if ($this->form_validation->run() == FALSE) {
-            $this->form_edit($id);
+            $this->editar($this->input->post('groups-id'));
         } else {
-
-            $name = $this->input->post('groupname');
-            $enable = ((bool)$this->input->post('enablegroup') == FALSE) ? FALSE : TRUE;
-
-            if($this->groups_model->update_all($id, $name, $enable)  != FALSE){
-                set_bootstrap_alert(trans_line('alerta_exito'), BOOTSTRAP_ALERT_SUCCESS);
-                return redirect('groups');
-            }else{
-                $error = $this->groups_model->error_consulta();
-                $mensajes_error = array(trans_line('alerta_error'), trans_line('alerta_error_codigo') . base64_encode($error['message']));
-                set_bootstrap_alert($mensajes_error, BOOTSTRAP_ALERT_DANGER);
-                return $this->form_edit($id);
+            $grupo = $this->input->post();
+            $grupo['estatus'] = isset($grupo['estatus']) ? 1 : 0;
+            if ($this->group->editar($grupo)) {
+                $msg = "El grupo se guardó con éxito";
+                set_bootstrap_alert($msg, BOOTSTRAP_ALERT_SUCCESS);
+            } else {
+                $msg = "Error al guardar el grupo, intente nuevamente";
+                set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
             }
+            redirect('groups');
         }
-
     }
 
-    function delete_group($id = 0)
+    public function borrar($id = 0)
     {
-        $this->cargar_idioma->carga_lang('groups/groups_index');
-        if ($this->groups_model->delete($id) != FALSE) {
-            set_bootstrap_alert(trans_line('alerta_borrado'), BOOTSTRAP_ALERT_SUCCESS);
+        if (!valid_id($id)) {
             return redirect('groups');
+        }
+        if ($this->group->editar(array('groups_id' => $id, 'estatus' => '0')) !== false) {
+            $msg = 'Se borró el registro con éxito';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_SUCCESS);
         } else {
-            set_bootstrap_alert(trans_line('alerta_borrado_fail'), BOOTSTRAP_ALERT_DANGER);
+            $msg = 'Error al borrar el registro, intente nuevamente';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
+        }
+        redirect('groups');
+    }
+
+    public function borrado_final($id = 0)
+    {
+        if (!valid_id($id)) {
             return redirect('groups');
         }
-    }
 
-    function form_insert()
-    {
-        $this->cargar_idioma->carga_lang('groups/groups_insertar');
-        $template['_B'] = 'groups/groups_insertar.php';
-        $this->load->template_view($this->template_base, $template);
-    }
-
-    function form_edit($id = 0)
-    {
-        $this->cargar_idioma->carga_lang('groups/groups_editar');
-        $data['grp'] = $this->groups_model->get_group($id);
-        $template['_B'] = 'groups/groups_editar.php';
-        $this->load->template_view($this->template_base, $data, $template);
+        if ($this->group->borrado_final(array('groups_id' => $id))) {
+            $msg = 'Se borró el registro con éxito';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_SUCCESS);
+        } else {
+            $msg = 'Error al borrar el registro, intente nuevamente';
+            set_bootstrap_alert($msg, BOOTSTRAP_ALERT_DANGER);
+        }
+        redirect('groups');
     }
 }
-
-
-?>

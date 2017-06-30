@@ -1,0 +1,67 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "eb9730230ffa046f18bee2d3490391b1",
+    "content-hash": "b15214df8a19aeed6bfdd60a630327fa",
+    "packages": [
+        {
+            "name": "lunasoft/sw-sdk-php",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lunasoft/sw-sdk-php.git",
+                "reference": "0c575f2752cb0a694987e6a414193a4c067efbf5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/lunasoft/sw-sdk-php/zipball/0c575f2752cb0a694987e6a414193a4c067efbf5",
+                "reference": "0c575f2752cb0a694987e6a414193a4c067efbf5",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^5.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "SWServices\\": "SWServices/",
+                    "tests\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Rich Barusta",
+                    "email": "ricardo.barusta@sw.com.mx"
+                },
+                {
+                    "name": "Alex Ramos",
+                    "email": "alejandro.ramos@sw.com.mx"
+                },
+                {
+                    "name": "Heltton Ramirez",
+                    "email": "heltton.ramirez@sw.com.mx"
+                }
+            ],
+            "description": "PHP Library for SW Services",
+            "homepage": "https://github.com/lunasoft/sw-sdk-php",
+            "time": "2017-05-15 18:56:58"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "lunasoft/sw-sdk-php": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}
